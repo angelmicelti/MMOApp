@@ -351,8 +351,7 @@
                 
                 <!-- Importar Caja (Oculto para Tutors) -->
                 <div id="import-excel-box" class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-gray-700 mb-2 flex items-center gap-2"><span class="text-[9px] font-bold text-white bg-blue-600 rounded px-1.5 py-0.5 uppercase tracking-wide">Paso 1</span><i class="fa-solid fa-file-import text-blue-500"></i> Importar Alumnado (Séneca)</h3>
-                    <p class="text-xs text-gray-500 mb-4">Sube el archivo de alumnado exportado de Séneca (.xls/.xlsx). Con la opción <b>multi-pestaña</b>, cada pestaña del Excel es un grupo y todos quedan registrados en «Grupos y Tutorías».</p>
+                    <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="fa-solid fa-file-import text-blue-500"></i> Importar Alumnado Masivo</h3>
                     <div class="space-y-4">
                         <!-- Modo multi-pestaña: una pestaña por grupo, el nombre de la pestaña es el grupo -->
                         <label class="flex items-center gap-2 cursor-pointer bg-blue-50 p-3 rounded-lg border border-blue-100">
@@ -362,7 +361,7 @@
                             </span>
                         </label>
                         <p class="text-[10px] text-gray-500 -mt-2" id="multisheet-hint" style="display:none;">
-                            Archivo multipestaña de Séneca: el nombre de cada pestaña se usará como grupo (ej: "1º A", "2º B"...) y se procesarán todas las pestañas. Los grupos quedan registrados en «Grupos y Tutorías».
+                            El nombre de cada pestaña se usará como grupo (ej: "1ºA", "1ºB"...). Se procesarán todas las pestañas.
                         </p>
                         <!-- Grupo/Curso: solo se usa si multi-pestaña está desactivado -->
                         <div id="import-course-wrapper">
@@ -376,17 +375,6 @@
                         <button onclick="processImport()" class="w-full bg-gray-800 text-white py-2 rounded-lg font-semibold flex items-center justify-center gap-2">
                             <i class="fa-solid fa-upload"></i> Subir a Base de Datos
                         </button>
-                    </div>
-                </div>
-
-                <!-- Gestión de Grupos y Tutorías (solo admin) -->
-                <div id="groups-manager-box" class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hidden">
-                    <h3 class="font-bold text-gray-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-rectangle-list text-blue-500"></i> Grupos y Tutorías <span id="groups-manager-year" class="text-xs text-gray-400 font-normal"></span></h3>
-                    <p class="text-xs text-gray-500 mb-3">Registro de grupos/unidades del curso. Aquí puedes <b>añadir o quitar grupos</b> (también nacen al importar alumnado multipestaña o al crear un alumno). Cada grupo sin tutor aparece como <b>tutoría libre</b> en la pestaña «Usuarios», donde podrás asignarlo.</p>
-                    <div id="groups-manager-list" class="border-t border-gray-100 pt-1 mb-3"></div>
-                    <div class="flex gap-2">
-                        <input type="text" id="groups-new-input" placeholder="Nuevo grupo (Ej: 1º A)" class="flex-1 border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        <button onclick="addGroupToRegistry()" class="bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors"><i class="fa-solid fa-plus"></i> Añadir</button>
                     </div>
                 </div>
 
@@ -728,7 +716,7 @@
 
                 <!-- Alta masiva de usuarios desde archivo de personal (Solo Admin) -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-gray-700 mb-2 flex items-center gap-2"><span class="text-[9px] font-bold text-white bg-blue-600 rounded px-1.5 py-0.5 uppercase tracking-wide">Paso 2</span><i class="fa-solid fa-file-import text-blue-500"></i> Alta de Profesorado (RelPerCen.xls)</h3>
+                    <h3 class="font-bold text-gray-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-file-import text-blue-500"></i> Alta masiva de Usuarios</h3>
                     <p class="text-xs text-gray-500 mb-3">
                         Sube el archivo de personal (p. ej. <b>RelPerCen.xls</b>) para dar de alta a los usuarios.
                         Se usa únicamente la columna <b>Usuario IdEA</b>, <b>sin el dominio</b> (p. ej. <i>mbaeesp634</i>).
@@ -744,17 +732,10 @@
                             <i class="fa-solid fa-user-plus"></i> Dar de alta usuarios del archivo
                         </button>
                         <p class="text-[10px] text-gray-400">
-                            Los usuarios ya existentes (mismo IdEA) se saltan. Después asigna cada tutoría en el
-                            <b>Paso 3</b> (tarjeta «Tutorías del curso») o con el botón de editar (lápiz) de la tabla inferior.
+                            Los usuarios ya existentes (mismo IdEA) se saltan. Después puedes marcar a cada tutor con el
+                            check <b>“Tutor”</b> de la tabla inferior: se le asigna el perfil inmediatamente.
                         </p>
                     </div>
-                </div>
-
-                <!-- Paso 3: Asignar tutorías disponibles -->
-                <div id="tutorias-overview-box" class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-gray-700 mb-2 flex items-center gap-2"><span class="text-[9px] font-bold text-white bg-blue-600 rounded px-1.5 py-0.5 uppercase tracking-wide">Paso 3</span><i class="fa-solid fa-chalkboard-user text-blue-500"></i> Tutorías del curso <span id="tutorias-overview-year" class="text-xs text-gray-400 font-normal"></span></h3>
-                    <p class="text-xs text-gray-500 mb-3">Asigna cada <b>tutoría libre</b> a un profesor: elige el docente en el desplegable y pulsa «Asignar». También puedes hacerlo desde el lápiz de cada usuario, cuyo desplegable solo muestra las tutorías aún sin tutor.</p>
-                    <div id="tutorias-overview-list" class="border-t border-gray-100 pt-1"></div>
                 </div>
 
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
@@ -778,7 +759,7 @@
                     <p class="text-[11px] text-gray-500 mt-3">
                         <i class="fa-solid fa-circle-info text-blue-400"></i>
                         Marca el check <b>Tutor</b> para convertir a un usuario en tutor de forma inmediata (sin marca = profesor).
-                        La tutoría concreta se asigna con el botón de editar (lápiz): el desplegable muestra solo las tutorías del curso activo que aún están libres.
+                        El grupo tutorizado se indica con el botón de editar (lápiz).
                     </p>
                 </div>
             </div>
@@ -906,10 +887,7 @@
                     <option value="tutor">Tutor (Puede ver/imprimir su grupo)</option>
                     <option value="admin">Administrador (Acceso Total)</option>
                 </select>
-                <select id="modal-user-group" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none hidden">
-                    <option value="">— Sin tutoría —</option>
-                </select>
-                <p id="modal-user-group-hint" class="text-[10px] text-gray-400 -mt-1 hidden">Solo se muestran las tutorías del curso activo que aún no tienen tutor.</p>
+                <input type="text" id="modal-user-group" placeholder="Grupo tutorizado (Ej: 1ºA)" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none hidden">
             </div>
             <div class="flex justify-end gap-3 mt-6">
                 <button onclick="closeUserModal()" class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors">Cancelar</button>
@@ -1030,7 +1008,6 @@
         // - Solo el rol "admin" puede cambiar de curso, crear cursos o archivarlos.
         let currentSchoolYear = null;     // string "YYYY/YYYY+1"
         let allSchoolYears = [];          // [{ id, label, createdAt, archived }]
-        let allGroupsByYear = {};         // { [syId]: [grupo normalizado, ...] } registro de grupos/tutorías por curso
 
         // Calcula el id de curso escolar ("YYYY/YYYY+1") al que pertenece una fecha.
         // Si month >= 8 (septiembre o posterior) → curso que empieza ese año.
@@ -1216,7 +1193,6 @@
                         archived: !!y.archived
                     }));
                     currentSchoolYear = data.current || allSchoolYears[0]?.id || getCurrentSchoolYear();
-                    allGroupsByYear = (data.groupsByYear && typeof data.groupsByYear === 'object' && !Array.isArray(data.groupsByYear)) ? data.groupsByYear : {};
                 } else {
                     // La nueva ruta está vacía. Intentar migrar desde la ruta antigua
                     // (pisaporte_settings/schoolYears) por si había datos preexistentes.
@@ -1453,17 +1429,11 @@
                                 await batch.commit();
                             }
 
-                            // 2) Eliminar el curso de la lista de school years y su
-                            //    registro de grupos/tutorías asociado.
+                            // 2) Eliminar el curso de la lista de school years.
                             const newYears = allSchoolYears.filter(y => y.id !== syId);
-                            if (allGroupsByYear[syId]) {
-                                const { [syId]: _removedGroups, ...restGroups } = allGroupsByYear;
-                                allGroupsByYear = restGroups;
-                            }
                             await setDoc(_settingsRef(), {
                                 current: currentSchoolYear,
-                                years: newYears,
-                                groupsByYear: allGroupsByYear
+                                years: newYears
                             }, { merge: true });
                             allSchoolYears = newYears;
 
@@ -1578,9 +1548,6 @@
                     createdAt: y.createdAt || Date.now(),
                     archived: !!y.archived
                 })) : [];
-                const newGroups = (data.groupsByYear && typeof data.groupsByYear === 'object' && !Array.isArray(data.groupsByYear)) ? data.groupsByYear : {};
-                const groupsChanged = JSON.stringify(newGroups) !== JSON.stringify(allGroupsByYear || {});
-                allGroupsByYear = newGroups;
                 const prevCurrent = currentSchoolYear;
                 allSchoolYears = years;
                 const newCurrent = data.current || years[0]?.id;
@@ -1598,12 +1565,6 @@
                 // cambios hechos desde otro dispositivo o desde el selector del header.
                 if (!document.getElementById('view-schoolyears').classList.contains('hidden')) {
                     renderSchoolYearsList();
-                }
-                // Refrescar la gestión de grupos/tutorías si el registro cambió
-                // (p. ej. otro dispositivo añadió o quitó un grupo).
-                if (groupsChanged) {
-                    if (!document.getElementById('view-students').classList.contains('hidden')) renderGroupsManager();
-                    if (!document.getElementById('view-users').classList.contains('hidden')) renderTutoriasOverview();
                 }
             }, (err) => {
                 console.warn('Error escuchando cursos escolares:', err);
@@ -2107,7 +2068,6 @@
 
             // Alumnado Tab Actions
             document.getElementById('import-excel-box').classList.toggle('hidden', role !== 'admin'); // Tutors insertan 1 a 1
-            document.getElementById('groups-manager-box')?.classList.toggle('hidden', role !== 'admin'); // Grupos y Tutorías: solo admin
             document.getElementById('btn-delete-group').classList.toggle('hidden', role !== 'admin'); 
 
             updateGroupSelectors(); // Refrescar combos
@@ -2167,9 +2127,9 @@
                 stopScannerVisually();
             }
 
-            if (tabId === 'students') { renderStudentsList(); renderGroupsManager(); }
+            if (tabId === 'students') renderStudentsList();
             if (tabId === 'reports') generateReport();
-            if (tabId === 'users') { renderUsersList(); renderTutoriasOverview(); }
+            if (tabId === 'users') renderUsersList();
             if (tabId === 'schoolyears') renderSchoolYearsList();
         };
 
@@ -2277,251 +2237,8 @@
             }).join('');
         };
 
-        // ================= GRUPOS Y TUTORÍAS (ADMIN) =================
-        // Registro explícito de grupos/tutorías por curso escolar. Se guarda en el
-        // mismo documento de settings que los cursos escolares
-        // (__settings_schoolYears) bajo la clave `groupsByYear` (todas las escrituras
-        // usan merge, así que no se pisan entre sí). Un "grupo" y una "tutoría"
-        // comparten lista: una tutoría es un grupo con tutor asignado
-        // (user.role === 'tutor' && user.tutorGroup). Para compatibilidad con datos
-        // previos, se consideran también los grupos presentes en el alumnado ya
-        // importado aunque no estén en el registro.
-        let _modalEditingGroupId = ''; // tutoría original del usuario abierto en el modal
-
-        // Unión del registro del curso activo y los grupos presentes en el alumnado.
-        function getKnownGroupsForActiveYear() {
-            const reg = Array.isArray(allGroupsByYear[currentSchoolYear]) ? allGroupsByYear[currentSchoolYear] : [];
-            const fromStudents = [...new Set(allStudents.map(s => formatGroupNameForFile(s.course)))].filter(Boolean);
-            return [...new Set([...reg, ...fromStudents])].sort((a, b) => a.localeCompare(b, 'es'));
-        }
-
-        // Grupos con tutor asignado (opcionalmente excluyendo a un usuario, para
-        // que al editar su propia tutoría siga apareciendo como disponible).
-        function getAssignedTutorGroups(excludeUserId) {
-            const assigned = new Set();
-            allUsers.forEach(u => {
-                if (u.role === 'tutor' && u.tutorGroup && u.id !== excludeUserId) {
-                    assigned.add(formatGroupNameForFile(u.tutorGroup));
-                }
-            });
-            return assigned;
-        }
-
-        // Tutorías libres del curso activo: grupos conocidos sin tutor.
-        function getAvailableTutorias(excludeUserId) {
-            const assigned = getAssignedTutorGroups(excludeUserId);
-            return getKnownGroupsForActiveYear().filter(g => !assigned.has(g));
-        }
-
-        // Devuelve el usuario tutor de un grupo (normalizado) o null.
-        function tutorOfGroup(normGroup) {
-            return allUsers.find(u => u.role === 'tutor' && u.tutorGroup
-                && formatGroupNameForFile(u.tutorGroup) === normGroup) || null;
-        }
-
-        // Registra grupos en el curso activo si no estaban (idempotente, merge).
-        async function registerGroupsIfMissing(names) {
-            if (currentAppUser?.role !== 'admin') return;
-            const sy = currentSchoolYear;
-            if (!sy) return;
-            const reg = Array.isArray(allGroupsByYear[sy]) ? [...allGroupsByYear[sy]] : [];
-            let changed = false;
-            (names || []).forEach(n => {
-                const norm = formatGroupNameForFile(n);
-                if (norm && norm !== 'TodosGrupos' && !reg.includes(norm)) { reg.push(norm); changed = true; }
-            });
-            if (!changed) return;
-            reg.sort((a, b) => a.localeCompare(b, 'es'));
-            const newMap = { ...allGroupsByYear, [sy]: reg };
-            try {
-                await setDoc(_settingsRef(), { groupsByYear: newMap }, { merge: true });
-                allGroupsByYear = newMap; // optimista; el snapshot lo confirmará
-            } catch (e) {
-                console.error('Error registrando grupos:', e);
-            }
-        }
-
-        // Rellena el desplegable de tutorías del modal de usuario con las tutorías
-        // LIBRES del curso activo. El grupo actual del usuario editado siempre se
-        // incluye (marcado como "actual") para no perderlo al guardar.
-        function populateTutorGroupSelect(preselected) {
-            const sel = document.getElementById('modal-user-group');
-            if (!sel) return;
-            const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-            const editingId = document.getElementById('modal-user-id').value || null;
-            const pre = preselected ? formatGroupNameForFile(preselected) : '';
-            const available = getAvailableTutorias(editingId);
-            let html = '<option value="">— Sin tutoría (solo profesor) —</option>';
-            available.forEach(g => {
-                const isCurrent = pre && g === pre;
-                html += `<option value="${esc(g)}"${isCurrent ? ' selected' : ''}>${esc(g)}${isCurrent ? ' (actual)' : ''}</option>`;
-            });
-            if (pre && !available.some(g => g === pre)) {
-                html += `<option value="${esc(pre)}" selected>${esc(pre)} (actual)</option>`;
-            }
-            sel.innerHTML = html;
-            sel.value = pre || '';
-        }
-
-        // Añade un grupo al registro del curso activo (tarjeta «Grupos y Tutorías»).
-        window.addGroupToRegistry = async () => {
-            if (currentAppUser?.role !== 'admin') return;
-            const input = document.getElementById('groups-new-input');
-            const raw = (input?.value || '').trim();
-            if (!raw) return showToast('Escribe el nombre del grupo (p. ej. 1º A).');
-            const norm = formatGroupNameForFile(raw);
-            if (!norm || norm === 'TodosGrupos') return showToast('Nombre de grupo no válido.');
-            if (getKnownGroupsForActiveYear().some(g => g === norm)) return showToast('Ese grupo ya existe en este curso.');
-            await registerGroupsIfMissing([norm]);
-            if (input) input.value = '';
-            showToast(`Grupo añadido: ${norm}`);
-            renderGroupsManager();
-        };
-
-        // Quita un grupo del registro. Se bloquea si tiene alumnos (hay que
-        // borrarlos primero con el botón «Grupo» del listado) o tutor asignado
-        // (hay que liberarlo primero en «Tutorías del curso»). Los grupos que
-        // existen solo por tener alumnos no necesitan este botón: desaparecen
-        // solos al vaciarse.
-        window.removeGroupFromRegistry = (group) => {
-            if (currentAppUser?.role !== 'admin') return;
-            const norm = formatGroupNameForFile(group);
-            const count = allStudents.filter(s => formatGroupNameForFile(s.course) === norm).length;
-            if (count > 0) {
-                return showToast(`El grupo ${norm} tiene ${count} alumno(s). Elimínalos primero desde el listado de Alumnado.`);
-            }
-            const tutor = tutorOfGroup(norm);
-            if (tutor) {
-                return showToast(`El grupo ${norm} tiene tutor asignado (${tutor.name}). Libéralo primero en «Tutorías del curso».`);
-            }
-            window.showConfirmModal('Quitar grupo', `¿Quitar el grupo "${norm}" del registro de tutorías?`, async () => {
-                try {
-                    const sy = currentSchoolYear;
-                    const reg = (allGroupsByYear[sy] || []).filter(g => g !== norm);
-                    const newMap = { ...allGroupsByYear, [sy]: reg };
-                    await setDoc(_settingsRef(), { groupsByYear: newMap }, { merge: true });
-                    allGroupsByYear = newMap;
-                    showToast(`Grupo eliminado del registro: ${norm}`);
-                    renderGroupsManager();
-                } catch (e) {
-                    console.error('Error eliminando grupo:', e);
-                    showToast('Error al eliminar el grupo.');
-                }
-            });
-        };
-
-        // Tarjeta «Grupos y Tutorías» de la vista Alumnado (solo admin).
-        window.renderGroupsManager = () => {
-            if (currentAppUser?.role !== 'admin') return;
-            const box = document.getElementById('groups-manager-box');
-            const listDiv = document.getElementById('groups-manager-list');
-            if (!box || !listDiv) return;
-            const yearEl = document.getElementById('groups-manager-year');
-            if (yearEl) yearEl.textContent = currentSchoolYear ? `(${formatSchoolYearLabel(currentSchoolYear)})` : '';
-            const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-            const escJs = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
-            const groups = getKnownGroupsForActiveYear();
-            if (groups.length === 0) {
-                listDiv.innerHTML = '<p class="text-gray-400 text-xs italic text-center py-3">Aún no hay grupos en este curso. Añádelos abajo o importa alumnado multipestaña.</p>';
-                return;
-            }
-            listDiv.innerHTML = groups.map(g => {
-                const count = allStudents.filter(s => formatGroupNameForFile(s.course) === g).length;
-                const tutor = tutorOfGroup(g);
-                const tutorHtml = tutor
-                    ? `<span class="text-[11px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-semibold">Tutor: ${esc(tutor.name)}</span>`
-                    : '<span class="text-[11px] bg-orange-50 text-orange-700 px-2 py-0.5 rounded font-semibold">Tutoría libre</span>';
-                return `<div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                    <div class="min-w-0">
-                        <span class="font-semibold text-gray-800 text-sm">${esc(g)}</span>
-                        <span class="text-[11px] text-gray-400 ml-2">${count} alum.</span>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        ${tutorHtml}
-                        <button onclick="removeGroupFromRegistry('${escJs(g)}')" class="text-red-400 hover:text-red-600 p-1" title="Quitar el grupo del registro"><i class="fa-solid fa-trash-can"></i></button>
-                    </div>
-                </div>`;
-            }).join('');
-        };
-
-        // Tarjeta «Tutorías del curso» de la vista Usuarios (Paso 3 del flujo).
-        // Lista cada grupo con su tutor o con un desplegable de profesores para
-        // asignarlo directamente, y botón «Liberar» para dejar la tutoría libre.
-        window.renderTutoriasOverview = () => {
-            if (currentAppUser?.role !== 'admin') return;
-            const listDiv = document.getElementById('tutorias-overview-list');
-            if (!listDiv) return;
-            const yearEl = document.getElementById('tutorias-overview-year');
-            if (yearEl) yearEl.textContent = currentSchoolYear ? `(${formatSchoolYearLabel(currentSchoolYear)})` : '';
-            const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-            const escJs = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
-            const groups = getKnownGroupsForActiveYear();
-            if (groups.length === 0) {
-                listDiv.innerHTML = '<p class="text-gray-400 text-xs italic text-center py-3">No hay grupos/tutorías todavía. Créalos en Alumnado → «Grupos y Tutorías» o importa alumnado multipestaña.</p>';
-                return;
-            }
-            const candidates = allUsers.filter(u => u.role === 'profesor').sort((a, b) => a.name.localeCompare(b.name, 'es'));
-            listDiv.innerHTML = groups.map((g, idx) => {
-                const tutor = tutorOfGroup(g);
-                const tutorHtml = tutor
-                    ? `<span class="text-[11px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-semibold">${esc(tutor.name)}</span>
-                       <button onclick="releaseTutoria('${escJs(g)}')" class="text-[11px] bg-gray-50 text-gray-600 px-2 py-1 rounded font-semibold hover:bg-gray-100 transition-colors" title="Dejar la tutoría libre">Liberar</button>`
-                    : `<select id="tutia-sel-${idx}" class="border border-gray-300 rounded-md p-1 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none max-w-[160px]">
-                            <option value="">— Elegir tutor —</option>
-                            ${candidates.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('')}
-                        </select>
-                       <button onclick="assignTutoriaFromList('${escJs(g)}', ${idx})" class="text-[11px] bg-blue-50 text-blue-700 px-2 py-1 rounded font-semibold hover:bg-blue-100 transition-colors">Asignar</button>`;
-                return `<div class="flex items-center justify-between gap-2 py-2 border-b border-gray-100 last:border-0">
-                    <div class="min-w-0">
-                        <span class="font-semibold text-gray-800 text-sm">${esc(g)}</span>
-                        <span class="text-[11px] text-gray-400 ml-2">${allStudents.filter(s => formatGroupNameForFile(s.course) === g).length} alum.</span>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">${tutorHtml}</div>
-                </div>`;
-            }).join('');
-        };
-
-        // Asigna una tutoría libre a un profesor desde la tarjeta «Tutorías del curso».
-        window.assignTutoriaFromList = async (group, idx) => {
-            const norm = formatGroupNameForFile(group);
-            const sel = document.getElementById(`tutia-sel-${idx}`);
-            const uid = sel ? sel.value : '';
-            if (!uid) return showToast('Elige un profesor para la tutoría.');
-            const u = allUsers.find(x => x.id === uid);
-            if (!u) return showToast('Usuario no encontrado.');
-            const clash = tutorOfGroup(norm);
-            if (clash && clash.id !== uid) {
-                renderTutoriasOverview();
-                return showToast(`La tutoría ${norm} ya está asignada a ${clash.name}.`);
-            }
-            try {
-                await updateDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'pisaporte_users', uid), { role: 'tutor', tutorGroup: norm });
-                showToast(`${u.name} asignado como tutor de ${norm}.`);
-            } catch (e) {
-                console.error('Error asignando tutoría:', e);
-                showToast('Error al asignar la tutoría.');
-            }
-        };
-
-        // Libera una tutoría: su tutor pasa a Profesor y el grupo queda libre.
-        window.releaseTutoria = (group) => {
-            const norm = formatGroupNameForFile(group);
-            const t = tutorOfGroup(norm);
-            if (!t) { renderTutoriasOverview(); return; }
-            window.showConfirmModal('Liberar tutoría', `${t.name} dejará de ser tutor de ${norm} (pasará a Profesor) y la tutoría quedará libre.`, async () => {
-                try {
-                    await updateDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'pisaporte_users', t.id), { role: 'profesor', tutorGroup: '' });
-                    showToast(`Tutoría ${norm} liberada.`);
-                } catch (e) {
-                    console.error('Error liberando tutoría:', e);
-                    showToast('Error al liberar la tutoría.');
-                }
-            });
-        };
-
         // ================= GESTIÓN DE USUARIOS (ADMIN) =================
         window.renderUsersList = () => {
-            if (typeof renderTutoriasOverview === 'function') renderTutoriasOverview();
             const tbody = document.getElementById('users-table-body');
             tbody.innerHTML = '';
             
@@ -2610,7 +2327,7 @@
             document.getElementById('modal-user-password').value = '';
             document.getElementById('modal-user-password-confirm').value = '';
             document.getElementById('modal-user-role').value = 'profesor';
-            _modalEditingGroupId = '';
+            document.getElementById('modal-user-group').value = '';
             document.getElementById('user-modal-title').textContent = 'Nuevo Usuario';
             toggleTutorGroupInput();
             document.getElementById('user-modal').style.display = 'flex';
@@ -2625,7 +2342,7 @@
             document.getElementById('modal-user-password').value = u.password;
             document.getElementById('modal-user-password-confirm').value = u.password;
             document.getElementById('modal-user-role').value = u.role;
-            _modalEditingGroupId = u.tutorGroup || '';
+            document.getElementById('modal-user-group').value = u.tutorGroup || '';
             document.getElementById('user-modal-title').textContent = 'Editar Usuario';
             toggleTutorGroupInput();
             document.getElementById('user-modal').style.display = 'flex';
@@ -2633,18 +2350,12 @@
 
         window.toggleTutorGroupInput = () => {
             const role = document.getElementById('modal-user-role').value;
-            const select = document.getElementById('modal-user-group');
-            const hint = document.getElementById('modal-user-group-hint');
+            const input = document.getElementById('modal-user-group');
             if (role === 'tutor') {
-                // Rellenar el desplegable con las tutorías libres del curso activo;
-                // si se está editando, su tutoría actual aparece marcada.
-                populateTutorGroupSelect(_modalEditingGroupId || '');
-                select.classList.remove('hidden');
-                if (hint) hint.classList.remove('hidden');
+                input.classList.remove('hidden');
             } else {
-                select.classList.add('hidden');
-                if (hint) hint.classList.add('hidden');
-                select.value = '';
+                input.classList.add('hidden');
+                input.value = '';
             }
         };
 
@@ -2657,16 +2368,7 @@
             const nameToSave = normalizedName || originalName;
             if (password.length < 6) return showToast("La contraseña debe tener al menos 6 caracteres");
             const tutorGroup = role === 'tutor' ? formatGroupNameForFile(tutorGroupRaw) : '';
-            if (role === 'tutor' && !tutorGroup) {
-                return showToast("Selecciona la tutoría en el desplegable (solo aparecen las tutorías libres).");
-            }
-            // Evitar dos tutores sobre la misma tutoría: comprobación final contra
-            // la caché local (el desplegable ya filtra las ocupadas).
-            if (role === 'tutor') {
-                const clash = allUsers.find(u => u.id !== id && u.role === 'tutor'
-                    && formatGroupNameForFile(u.tutorGroup || '') === tutorGroup);
-                if (clash) return showToast(`La tutoría ${tutorGroup} ya está asignada a ${clash.name}.`);
-            }
+            if (role === 'tutor' && !tutorGroupRaw) return showToast("Indica el grupo del tutor");
             const userData = { name: nameToSave, username, password, role, tutorGroup };
             try {
                 let savedDocRef = null;
@@ -2915,7 +2617,6 @@
                     name: nameToSave, course, importedAt: Date.now(),
                     schoolYear: currentSchoolYear || getCurrentSchoolYear()
                 });
-                registerGroupsIfMissing([course]);
                 // Cerrar el modal del alumno INMEDIATAMENTE tras el guardado exitoso
                 closeStudentModal();
                 // Si el nombre fue normalizado, ofrecer deshacer via toast
@@ -2955,7 +2656,6 @@
             try {
                 const studentRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'pisaporte_students', studentId);
                 await updateDoc(studentRef, { name: nameToSave, course });
-                registerGroupsIfMissing([course]);
                 // Cerrar el modal del alumno INMEDIATAMENTE tras la actualización
                 closeStudentModal();
                 // Si el nombre fue normalizado, ofrecer deshacer via toast
@@ -3449,7 +3149,6 @@
                     let duplicatedCount = 0;
                     let totalGroups = 0;
                     let groupsProcessed = [];
-                    const groupsToRegister = new Set(); // grupos a registrar en «Grupos y Tutorías»
 
                     // Determinar lista de hojas a procesar
                     let sheetsToProcess;
@@ -3508,14 +3207,9 @@
                         }
                         if (groupImported > 0 || groupDuplicated > 0) {
                             totalGroups++;
-                            groupsToRegister.add(course);
                             groupsProcessed.push(`${course}: ${groupImported} nuevos${groupDuplicated > 0 ? `, ${groupDuplicated} duplicados` : ''}`);
                         }
                     }
-
-                    // Registrar los grupos creados/confirmados en «Grupos y Tutorías»
-                    // del curso activo (idempotente; no toca los ya existentes).
-                    if (groupsToRegister.size > 0) await registerGroupsIfMissing([...groupsToRegister]);
 
                     // Mensaje de resumen
                     if (multiSheet) {
@@ -4117,8 +3811,7 @@
 
         window.renderStudentsList = () => {
             if (currentAppUser?.role === 'profesor') return; // Bloqueado
-            renderGroupsManager(); // Tarjeta «Grupos y Tutorías» (guard interno: solo admin)
-
+            
             const filter = document.getElementById('group-filter').value;
             const listDiv = document.getElementById('students-list');
             const btnDeleteGroup = document.getElementById('btn-delete-group');
