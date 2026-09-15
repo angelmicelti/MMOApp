@@ -211,13 +211,6 @@
                 <i class="fa-solid fa-gear text-[10px] text-blue-200 hidden" id="school-year-pill-gear"></i>
             </button>
             <span id="current-user-name" class="text-xs font-semibold bg-blue-700 px-2 py-1 rounded-md">Usuario</span>
-            <!-- Descarga del manual de uso correspondiente al perfil conectado -->
-            <button onclick="downloadManual()" class="text-white hover:text-gray-200" title="Descargar el manual de uso de mi perfil">
-                <i class="fa-solid fa-book-open"></i>
-            </button>
-            <button onclick="openChangePasswordModal()" class="text-white hover:text-gray-200" title="Cambiar mi contraseña">
-                <i class="fa-solid fa-key"></i>
-            </button>
             <button onclick="logout()" class="text-white hover:text-gray-200" title="Cerrar sesión">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </button>
@@ -237,20 +230,28 @@
 
                     <!-- Formulario de Login -->
                     <div id="form-login" class="space-y-4">
-                        <!-- Aviso: el acceso se realiza con el usuario IdEA (sin dominio) -->
-                        <p class="text-[11px] text-gray-600 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 leading-snug text-left">
-                            <i class="fa-solid fa-circle-info text-blue-400"></i>
-                            El acceso se realiza con tu <b>usuario IdEA</b>, sin el dominio
-                            (p. ej. <span class="font-mono font-semibold text-blue-700">jandluz123</span>).
-                            Si es tu primer acceso, tu contraseña inicial coincide con tu usuario.
-                        </p>
-                        <input type="text" id="login-username" placeholder="Usuario IdEA (ej: jandluz123)" title="Introduce tu usuario IdEA sin el dominio, p. ej. jandluz123" autocomplete="username" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
-                        <input type="password" id="login-password" placeholder="Contraseña" autocomplete="current-password" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
+                        <input type="text" id="login-username" placeholder="Usuario" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
+                        <input type="password" id="login-password" placeholder="Contraseña" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
                         <button onclick="processLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow transition-colors mt-2">
                             Entrar
                         </button>
-                        <!-- Autorregistro eliminado: los usuarios se dan de alta masivamente
-                             desde la pestaña Usuarios (archivo de personal, columna Usuario IdEA). -->
+                        <button onclick="showRegisterScreen()" class="w-full bg-gray-100 hover:bg-gray-200 text-blue-600 font-bold py-3 rounded-xl shadow transition-colors mt-2 border border-gray-200">
+                            Registrarse
+                        </button>
+                    </div>
+
+                    <!-- Formulario de Registro (Autoregistro) -->
+                    <div id="form-register" class="space-y-4 hidden">
+                        <input type="text" id="reg-name" placeholder="Apellido1 Apellido2, Nombre" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
+                        <input type="text" id="reg-username" placeholder="Usuario de acceso" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
+                        <input type="password" id="reg-password" placeholder="Contraseña" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
+                        <input type="password" id="reg-password-confirm" placeholder="Repetir contraseña" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
+                        <button onclick="processRegister()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow transition-colors mt-2">
+                            Crear Cuenta
+                        </button>
+                        <button onclick="showLoginScreen()" class="w-full bg-transparent hover:bg-gray-50 text-gray-500 font-bold py-2 rounded-xl transition-colors mt-2">
+                            Volver al Login
+                        </button>
                     </div>
 
                     <!-- Formulario de Creación Súper Admin (Solo si no hay usuarios) -->
@@ -713,31 +714,6 @@
         <!-- ================= VISTA: ADMINISTRACIÓN USUARIOS ================= -->
         <section id="view-users" class="view-section hidden">
             <div class="max-w-xl mx-auto mt-2 space-y-4">
-
-                <!-- Alta masiva de usuarios desde archivo de personal (Solo Admin) -->
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-gray-700 mb-3 flex items-center gap-2"><i class="fa-solid fa-file-import text-blue-500"></i> Alta masiva de Usuarios</h3>
-                    <p class="text-xs text-gray-500 mb-3">
-                        Sube el archivo de personal (p. ej. <b>RelPerCen.xls</b>) para dar de alta a los usuarios.
-                        Se usa únicamente la columna <b>Usuario IdEA</b>, <b>sin el dominio</b> (p. ej. <i>mbaeesp634</i>).
-                        Inicialmente <b>usuario y contraseña coinciden</b>; cada usuario podrá cambiar su contraseña
-                        desde el icono de la llave de la cabecera. Rol inicial: <b>Profesor</b>.
-                    </p>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Archivo Excel (.xls, .xlsx)</label>
-                            <input type="file" id="import-users-file" accept=".xls,.xlsx,.csv" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                        </div>
-                        <button onclick="processUserImport()" class="w-full bg-gray-800 hover:bg-gray-900 text-white py-2 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors">
-                            <i class="fa-solid fa-user-plus"></i> Dar de alta usuarios del archivo
-                        </button>
-                        <p class="text-[10px] text-gray-400">
-                            Los usuarios ya existentes (mismo IdEA) se saltan. Después puedes marcar a cada tutor con el
-                            check <b>“Tutor”</b> de la tabla inferior: se le asigna el perfil inmediatamente.
-                        </p>
-                    </div>
-                </div>
-
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fa-solid fa-user-shield text-blue-500"></i> Gestión de Usuarios</h3>
@@ -749,18 +725,12 @@
                                 <tr class="bg-gray-50 text-gray-600 text-xs uppercase border-b border-gray-200">
                                     <th class="p-2">Nombre / Usuario</th>
                                     <th class="p-2">Rol / Info</th>
-                                    <th class="p-2 text-center" title="Marca el check para asignar el perfil de Tutor; desmárcalo para asignar Profesor">Tutor</th>
                                     <th class="p-2 text-right">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="users-table-body" class="text-sm divide-y divide-gray-100"></tbody>
                         </table>
                     </div>
-                    <p class="text-[11px] text-gray-500 mt-3">
-                        <i class="fa-solid fa-circle-info text-blue-400"></i>
-                        Marca el check <b>Tutor</b> para convertir a un usuario en tutor de forma inmediata (sin marca = profesor).
-                        El grupo tutorizado se indica con el botón de editar (lápiz).
-                    </p>
                 </div>
             </div>
         </section>
@@ -892,25 +862,6 @@
             <div class="flex justify-end gap-3 mt-6">
                 <button onclick="closeUserModal()" class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors">Cancelar</button>
                 <button onclick="saveUserModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">Guardar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Cambiar MI Contraseña (cualquier usuario logueado) -->
-    <div id="password-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center" style="display: none;">
-        <div class="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl transform transition-all">
-            <h3 class="text-lg font-bold text-gray-800 mb-1">Cambiar mi contraseña</h3>
-            <p class="text-xs text-gray-500 mb-4">
-                Si es tu primer acceso, tu contraseña inicial coincide con tu usuario IdEA. Cámbiala aquí por una propia.
-            </p>
-            <div class="space-y-3">
-                <input type="password" id="pw-current" placeholder="Contraseña actual" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                <input type="password" id="pw-new" placeholder="Contraseña nueva (mín. 6 caracteres)" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                <input type="password" id="pw-new2" placeholder="Repetir contraseña nueva" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            </div>
-            <div class="flex justify-end gap-3 mt-6">
-                <button onclick="closePasswordModal()" class="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors">Cancelar</button>
-                <button onclick="processChangePassword()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">Guardar</button>
             </div>
         </div>
     </div>
@@ -1827,6 +1778,7 @@
             document.getElementById('login-subtitle').textContent = "Crea el usuario administrador";
             
             document.getElementById('form-login').classList.add('hidden');
+            document.getElementById('form-register').classList.add('hidden');
             document.getElementById('form-setup').classList.remove('hidden');
         }
 
@@ -1841,15 +1793,31 @@
             document.getElementById('login-subtitle').textContent = "Introduce tus credenciales";
 
             document.getElementById('form-setup').classList.add('hidden');
+            document.getElementById('form-register').classList.add('hidden');
             document.getElementById('form-login').classList.remove('hidden');
 
             // Apagar escáner por si acaso
             stopScannerVisually();
         }
         // Exponer en window porque el script es type="module" (las function declarations
-        // no se auto-asignan al global object) y algunos botones usan onclick inline.
+        // no se auto-asignan al global object) y el boton "Volver al Login" usa onclick inline.
         window.showLoginScreen = showLoginScreen;
         window.showSetupAdminScreen = showSetupAdminScreen;
+
+        window.showRegisterScreen = () => {
+            document.getElementById('login-title').textContent = "Registro";
+            document.getElementById('login-subtitle').textContent = "Crea tu cuenta de profesor";
+            
+            document.getElementById('form-login').classList.add('hidden');
+            document.getElementById('form-setup').classList.add('hidden');
+            document.getElementById('form-register').classList.remove('hidden');
+            
+            // Limpiar campos
+            document.getElementById('reg-name').value = '';
+            document.getElementById('reg-username').value = '';
+            document.getElementById('reg-password').value = '';
+            document.getElementById('reg-password-confirm').value = '';
+        };
 
         window.createInitialAdmin = async () => {
             const originalName = document.getElementById('setup-name').value.trim();
@@ -1886,6 +1854,41 @@
                 showToast("Error creando usuario.");
             }
         }
+
+        window.processRegister = async () => {
+            const originalName = document.getElementById('reg-name').value.trim();
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
+            const confirmPwd = document.getElementById('reg-password-confirm').value.trim();
+
+            if (!originalName || !username || !password || !confirmPwd) return showToast("Rellena todos los campos");
+            if (password.length < 6) return showToast("La contraseña debe tener al menos 6 caracteres");
+            if (password !== confirmPwd) return showToast("Las contraseñas no coinciden");
+            if (allUsers.some(u => u.username.toLowerCase() === username.toLowerCase())) return showToast("El usuario ya existe. Elige otro.");
+
+            // Auto-normalizar al formato "Apellido1 Apellido2, Nombre".
+            const nn = normalizeNameFormat(originalName);
+            const nameToSave = nn.changed ? nn.name : originalName;
+            await _persistRegister(nameToSave, username, password);
+        };
+
+        // Persiste un profesor en Firestore y auto-inicia sesión.
+        async function _persistRegister(name, username, password) {
+            try {
+                const usersRef = collection(db, 'artifacts', activeAppId, 'public', 'data', 'pisaporte_users');
+                await addDoc(usersRef, { name, username, password, role: 'profesor', tutorGroup: '' });
+                showToast("Cuenta creada. Iniciando sesión...");
+                setTimeout(() => {
+                    showLoginScreen();
+                    document.getElementById('login-username').value = username;
+                    document.getElementById('login-password').value = password;
+                    processLogin();
+                }, 1500);
+            } catch (e) {
+                console.error('Error registrando profesor:', e);
+                showToast("Error creando usuario.");
+            }
+        };
 
         window.processLogin = () => {
             const username = document.getElementById('login-username').value.trim();
@@ -1948,83 +1951,13 @@
             if (lu) lu.value = '';
             if (lp) lp.value = '';
             // Cerrar todos los modales abiertos
-            ['user-modal', 'student-modal', 'qr-preview-modal', 'confirm-modal', 'password-modal'].forEach(id => {
+            ['user-modal', 'student-modal', 'qr-preview-modal', 'confirm-modal'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
             // Detener camara y volver a pantalla de login
             stopScannerVisually();
             showLoginScreen();
-        };
-
-        // ================= MANUAL DE USO (descarga según perfil) =================
-        // Cada perfil (admin / tutor / profesor) tiene su manual PDF alojado junto a
-        // index.html. El botón del banner superior descarga el que corresponde al rol
-        // del usuario conectado. Se comprueba antes con HEAD por si el archivo no
-        // estuviera desplegado junto a la aplicación.
-        window.downloadManual = async () => {
-            if (!currentAppUser) return;
-            const role = currentAppUser.role;
-            const file = `manual-${role}.pdf`;
-            try {
-                const res = await fetch(file, { method: 'HEAD' });
-                if (!res.ok) throw new Error('manual no disponible');
-                const a = document.createElement('a');
-                a.href = file;
-                a.download = file;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                showToast(`Descargando el manual de tu perfil (${role})...`);
-            } catch (e) {
-                console.error('downloadManual:', e);
-                showToast('El manual no está disponible en este momento.');
-            }
-        };
-
-        // ================= CAMBIAR MI CONTRASEÑA (cualquier usuario) =================
-        // Permite a cada usuario cambiar su propia contraseña (p. ej. la inicial
-        // de alta masiva, que coincide con su usuario IdEA).
-        window.openChangePasswordModal = () => {
-            if (!currentAppUser) return;
-            ['pw-current', 'pw-new', 'pw-new2'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.value = '';
-            });
-            document.getElementById('password-modal').style.display = 'flex';
-        };
-
-        window.closePasswordModal = () => {
-            document.getElementById('password-modal').style.display = 'none';
-        };
-
-        window.processChangePassword = async () => {
-            if (!currentAppUser) return;
-            const currentPwd = document.getElementById('pw-current').value;
-            const newPwd = document.getElementById('pw-new').value;
-            const newPwd2 = document.getElementById('pw-new2').value;
-
-            if (!currentPwd || !newPwd || !newPwd2) return showToast("Rellena todos los campos");
-            // Verificación de la contraseña actual (mismo criterio case-sensitive que el login)
-            if (currentPwd !== currentAppUser.password) return showToast("La contraseña actual no es correcta");
-            if (newPwd.length < 6) return showToast("La contraseña debe tener al menos 6 caracteres");
-            if (newPwd !== newPwd2) return showToast("Las contraseñas nuevas no coinciden");
-            if (newPwd === currentPwd) return showToast("La nueva contraseña debe ser distinta de la actual");
-
-            try {
-                await updateDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'pisaporte_users', currentAppUser.id), {
-                    password: newPwd
-                });
-                // Actualizar cachés locales (el listener refrescará allUsers igualmente)
-                currentAppUser.password = newPwd;
-                const mine = allUsers.find(u => u.id === currentAppUser.id);
-                if (mine) mine.password = newPwd;
-                closePasswordModal();
-                showToast("Contraseña actualizada correctamente");
-            } catch (e) {
-                console.error('Error cambiando la contraseña:', e);
-                showToast("Error cambiando la contraseña");
-            }
         };
 
         function applyPermissions() {
@@ -2257,16 +2190,6 @@
                 // Escape para display HTML
                 const escapeHtml = (str) => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-                // Check "Tutor": marcado = perfil tutor, sin marca = perfil profesor.
-                // Para administradores el check se deshabilita (no aplica).
-                const isAdmin = u.role === 'admin';
-                const isTutor = u.role === 'tutor';
-                const tutorCheckTitle = isAdmin
-                    ? 'Los administradores no se marcan como tutores'
-                    : (isTutor
-                        ? 'Ahora es TUTOR. Desmarca para asignar el perfil de Profesor'
-                        : 'Ahora es PROFESOR. Marca para asignar el perfil de Tutor');
-
                 const row = `
                     <tr class="hover:bg-gray-50">
                         <td class="p-3">
@@ -2277,14 +2200,6 @@
                             <span class="${badgeClass} px-2 py-1 rounded text-xs font-bold">${badgeText}</span>
                             ${extraInfo}
                         </td>
-                        <td class="p-3 text-center">
-                            <input type="checkbox"
-                                class="w-5 h-5 rounded text-blue-600 border-gray-300 focus:ring-blue-500 ${isAdmin ? 'opacity-40' : 'cursor-pointer'}"
-                                ${isTutor ? 'checked' : ''}
-                                ${isAdmin ? 'disabled' : ''}
-                                title="${tutorCheckTitle}"
-                                onchange="onTutorCheckChange('${safeId}', this.checked)">
-                        </td>
                         <td class="p-3 text-right">
                             <button onclick="editUser('${safeId}')" class="text-blue-500 hover:text-blue-700 p-2"><i class="fa-solid fa-pen"></i></button>
                             <button onclick="confirmDeleteUser('${safeId}', '${safeName}')" class="text-red-500 hover:text-red-700 p-2" ${u.id === currentAppUser.id ? 'disabled opacity-50' : ''}><i class="fa-solid fa-trash-can"></i></button>
@@ -2293,31 +2208,6 @@
                 `;
                 tbody.insertAdjacentHTML('beforeend', row);
             });
-        };
-
-        // Check "Tutor" (Solo Admin): asigna el perfil inmediatamente al pulsar.
-        // Marcado → rol 'tutor'; sin marcar → rol 'profesor'.
-        // Se conserva tutorGroup para que, al volver a marcar, se recupere su grupo.
-        window.onTutorCheckChange = async (id, checked) => {
-            const u = allUsers.find(x => x.id === id);
-            if (!u) { renderUsersList(); return; }
-            // Seguridad: un admin no se convierte en tutor/profesor vía check
-            if (u.role === 'admin') { renderUsersList(); return; }
-            const newRole = checked ? 'tutor' : 'profesor';
-            try {
-                await updateDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'pisaporte_users', id), {
-                    role: newRole,
-                    tutorGroup: u.tutorGroup || ''
-                });
-                showToast(checked
-                    ? `${u.name} ahora es Tutor${u.tutorGroup ? ` (${u.tutorGroup})` : ' (sin grupo asignado)'}.`
-                    : `${u.name} ahora es Profesor.`);
-                // El listener de usuarios re-renderizará la tabla al llegar el snapshot.
-            } catch (e) {
-                console.error('Error cambiando el perfil:', e);
-                showToast("Error cambiando el perfil.");
-                renderUsersList(); // Restaurar el estado visual del check
-            }
         };
 
         window.openUserModal = () => {
@@ -2437,104 +2327,6 @@
                     showToast("Usuario eliminado");
                 } catch (e) { showToast("Error al eliminar"); }
             });
-        };
-
-        // ================= ALTA MASIVA DE USUARIOS (ADMIN) =================
-        // Da de alta usuarios a partir del archivo de personal (p. ej. RelPerCen.xls).
-        // - Se usa SOLO la columna "Usuario IdEA", sin el dominio (lo que haya
-        //   antes de la '@'): p. ej. "mbaeesp634@g.educaand.es" → "mbaeesp634".
-        // - Inicialmente usuario y contraseña coinciden (el usuario podrá cambiarla
-        //   desde el icono de la llave de la cabecera).
-        // - Rol inicial: 'profesor'. El tutor se asigna con el check de la tabla.
-        // - Los usuarios ya existentes (mismo IdEA, comparación case-insensitive
-        //   igual que el login) se saltan.
-        window.processUserImport = async () => {
-            const fileInput = document.getElementById('import-users-file');
-            if (!fileInput.files.length) return showToast("Selecciona un archivo Excel.");
-
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                    let importedCount = 0;
-                    let duplicatedCount = 0;
-                    let withoutIdeaCount = 0;
-                    const seenInFile = new Set(); // Deduplicar dentro del propio archivo
-
-                    for (const sheetName of workbook.SheetNames) {
-                        const sheet = workbook.Sheets[sheetName];
-                        if (!sheet) continue;
-                        const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-
-                        for (const row of rows) {
-                            const keys = Object.keys(row);
-
-                            // Localizar la columna del Usuario IdEA (tolera variantes
-                            // como "Usuario IdEA", "Usuario IdEA " o "Usuario IdEA/IaMO")
-                            const ideaKey = keys.find(k => /usuario\s*idea/i.test(String(k).trim()))
-                                || keys.find(k => /idea/i.test(String(k)));
-                            if (!ideaKey) continue; // Hoja sin columna IdEA: se ignora
-
-                            // Usuario IdEA SIN dominio: todo lo anterior a la '@'
-                            let idea = String(row[ideaKey] || '').trim();
-                            if (!idea) { withoutIdeaCount++; continue; }
-                            idea = idea.split('@')[0].replace(/\s+/g, '');
-                            if (!idea) { withoutIdeaCount++; continue; }
-
-                            // Nombre del empleado ("Empleado/a" o variantes); si no,
-                            // se usa la primera columna; como último recurso, el IdEA.
-                            const nameKey = keys.find(k => /^empleado/i.test(String(k).trim()))
-                                || keys.find(k => /^nombre/i.test(String(k).trim()))
-                                || keys[0];
-                            let name = String(row[nameKey] || '').trim().replace(/^["'](.+(?=["']$))["']$/, '$1');
-                            if (!name) name = idea;
-
-                            const dedupeKey = idea.toLowerCase();
-                            if (seenInFile.has(dedupeKey)) { duplicatedCount++; continue; }
-                            seenInFile.add(dedupeKey);
-
-                            // Duplicado en base de datos (mismo criterio que el login)
-                            if (allUsers.some(u => String(u.username).toLowerCase() === dedupeKey)) {
-                                duplicatedCount++;
-                                continue;
-                            }
-
-                            // Auto-normalizar al formato "Apellido1 Apellido2, Nombre"
-                            const nn = normalizeNameFormat(name);
-                            const nameToSave = nn.changed ? nn.name : name;
-
-                            await addDoc(collection(db, 'artifacts', activeAppId, 'public', 'data', 'pisaporte_users'), {
-                                name: nameToSave,
-                                username: idea,
-                                password: idea, // Inicialmente la contraseña es igual al usuario
-                                role: 'profesor',
-                                tutorGroup: ''
-                            });
-                            // Actualizar caché local para no duplicar en filas siguientes
-                            allUsers.push({
-                                id: 'temp_' + Date.now() + '_' + Math.random(),
-                                name: nameToSave, username: idea, password: idea,
-                                role: 'profesor', tutorGroup: ''
-                            });
-                            importedCount++;
-                        }
-                    }
-
-                    if (importedCount === 0 && duplicatedCount === 0 && withoutIdeaCount === 0) {
-                        showToast("No se encontró la columna 'Usuario IdEA' en el archivo.");
-                    } else {
-                        let msg = `Alta completada: ${importedCount} usuario(s) nuevo(s), ${duplicatedCount} ya existente(s)`;
-                        if (withoutIdeaCount > 0) msg += `, ${withoutIdeaCount} fila(s) sin IdEA`;
-                        showToast(msg + '.');
-                    }
-                    fileInput.value = '';
-                    if (!document.getElementById('view-users').classList.contains('hidden')) renderUsersList();
-                } catch (error) {
-                    console.error('Error importando usuarios:', error);
-                    showToast("Error leyendo el archivo.");
-                }
-            };
-            reader.readAsArrayBuffer(fileInput.files[0]);
         };
 
         // ================= GESTIÓN INDIVIDUAL DE ALUMNOS =================
@@ -4328,51 +4120,20 @@
                 studentsTableWrapper.classList.add('hidden');
                 document.getElementById('report-student-detail-title').textContent = `${studentName} (${studentCourse})`;
 
-                // Detalle COMPLETO del alumno (sin límite de registros), separado en
-                // sesiones autorizadas y no autorizadas, mostrando fecha, hora y
-                // franja horaria (1ª-6ª, Recreo) de cada sesión.
-                const sortedLogs = [...studentLogs].sort((a, b) => b.timestamp - a.timestamp);
-                // Etiqueta de franja: usa la almacenada en el registro y, si no existe
-                // (registros antiguos), la recalcula a partir del timestamp.
-                const slotLabelOf = (l) => {
-                    if (l.timeSlotLabel) return l.timeSlotLabel;
-                    const s = SCHOOL_TIME_SLOTS.find(x => x.id === l.timeSlotId);
-                    return s ? s.label : getSchoolTimeSlot(l.timestamp).label;
-                };
-                const _esc = (str) => String(str == null ? '' : str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-                const detailRowHtml = (l) => {
-                    const d = new Date(l.timestamp);
-                    const dateStr = d.toLocaleDateString('es-ES');
-                    const timeStr = d.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
-                    const user = l.userName ? ` <span class="text-gray-500">· ${_esc(l.userName)}</span>` : '';
-                    return `<div class="flex items-center justify-between gap-2 border-b border-blue-100 py-1">
-                        <span class="whitespace-nowrap font-medium">${dateStr} <span class="text-gray-500">${timeStr}</span></span>
-                        <span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap">${_esc(slotLabelOf(l))}</span>
-                        <span class="text-gray-400 text-[10px] whitespace-nowrap">${_esc(l.course || '-')}</span>
-                        <span class="text-gray-500 text-[10px] whitespace-nowrap overflow-hidden text-ellipsis">${user}</span>
-                    </div>`;
-                };
-                const detailBlockHtml = (title, logs, colorCls) => {
-                    let h = `<p class="text-[10px] font-bold uppercase tracking-wide mt-2 ${colorCls}">${title} (${logs.length})</p>`;
-                    if (logs.length === 0) {
-                        h += `<p class="text-gray-400 italic">Ninguna.</p>`;
-                    } else {
-                        logs.forEach(l => { h += detailRowHtml(l); });
-                    }
-                    return h;
-                };
-                const authList = sortedLogs.filter(l => l.requested && l.authorized);
-                const denList = sortedLogs.filter(l => l.requested && !l.authorized);
-                const nosolList = sortedLogs.filter(l => !l.requested);
+                // Listar ultimos 10 registros del alumno
+                const sortedLogs = [...studentLogs].sort((a, b) => b.timestamp - a.timestamp).slice(0, 10);
                 let detailHtml = '';
                 if (sortedLogs.length === 0) {
                     detailHtml = '<p class="text-gray-500 italic">Sin registros en este periodo.</p>';
                 } else {
-                    detailHtml += detailBlockHtml('Sesiones autorizadas', authList, 'text-green-700');
-                    detailHtml += detailBlockHtml('Sesiones no autorizadas (denegadas)', denList, 'text-red-700');
-                    if (nosolList.length > 0) {
-                        detailHtml += detailBlockHtml('Registros sin solicitud de servicio', nosolList, 'text-gray-500');
-                    }
+                    sortedLogs.forEach(l => {
+                        const d = new Date(l.timestamp);
+                        const dateStr = d.toLocaleDateString('es-ES') + ' ' + d.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
+                        const status = !l.requested ? '<span class="text-gray-500">No solicitó</span>'
+                            : (l.authorized ? '<span class="text-green-700 font-bold">Autorizada</span>' : '<span class="text-red-700 font-bold">Denegada</span>');
+                        const user = l.userName ? `<span class="text-gray-500">por ${l.userName}</span>` : '';
+                        detailHtml += `<div class="flex justify-between border-b border-blue-100 pb-1"><span>${dateStr}</span><span>${status} ${user}</span></div>`;
+                    });
                 }
                 document.getElementById('report-student-detail-body').innerHTML = detailHtml;
             } else {
@@ -4782,11 +4543,6 @@
                 .rp-sub { color: #6b7280; font-size: 11px; }
                 .rp-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; border: 1px solid #bfdbfe; background-color: #eff6ff; color: #1e3a8a; }
                 .rp-empty { text-align: center; color: #6b7280; font-style: italic; padding: 20px; font-family: sans-serif; }
-                .rp-block-title { font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 14px; margin-bottom: 4px; font-family: sans-serif; }
-                .rp-block-auth { color: #15803d; }
-                .rp-block-den { color: #b91c1c; }
-                .rp-block-none { color: #6b7280; }
-                .rp-slot { display: inline-block; padding: 1px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; border: 1px solid #bfdbfe; background-color: #eff6ff; color: #1e3a8a; white-space: nowrap; }
             `;
             printArea.appendChild(style);
 
@@ -4811,49 +4567,32 @@
                 </div>`;
 
                 if (studentFilter && studentFilter !== 'ALL') {
-                    // Detalle COMPLETO del alumno (sin límite de registros), separado en
-                    // sesiones autorizadas y no autorizadas, con fecha, hora y franja horaria.
+                    // Detalle del alumno concreto: ultimos 10 registros
                     const student = allStudents.find(x => x.id === studentFilter);
                     const studentName = student ? student.name : 'Alumno';
                     const studentCourse = student ? student.course : '-';
                     contentHtml += `<div class="rp-section-title">Detalle del alumno: ${escapeHtml(studentName)} (${escapeHtml(studentCourse)})</div>`;
                     const studentLogs = filteredLogs.filter(l => l.studentId === studentFilter)
-                        .sort((a, b) => b.timestamp - a.timestamp);
-                    // Etiqueta de franja: usa la almacenada y, si no existe (registros
-                    // antiguos), la recalcula a partir del timestamp.
-                    const slotLabelOf = (l) => {
-                        if (l.timeSlotLabel) return l.timeSlotLabel;
-                        const s = SCHOOL_TIME_SLOTS.find(x => x.id === l.timeSlotId);
-                        return s ? s.label : getSchoolTimeSlot(l.timestamp).label;
-                    };
-                    const printRowHtml = (l) => {
-                        const d = new Date(l.timestamp);
-                        const dateStr = d.toLocaleDateString('es-ES') + ' ' + d.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
-                        const userHtml = l.userName ? ` <span class="rp-sub">· ${escapeHtml(l.userName)}</span>` : '';
-                        return `<div class="rp-detail-row"><span class="rp-date">${dateStr}</span><span><span class="rp-slot">${escapeHtml(slotLabelOf(l))}</span> ${userHtml}</span></div>`;
-                    };
-                    const printBlockHtml = (title, logs, cls) => {
-                        let h = `<div class="rp-block-title ${cls}">${title} (${logs.length})</div>`;
-                        if (logs.length === 0) {
-                            h += `<div class="rp-sub" style="padding: 4px 0;">Ninguna.</div>`;
-                        } else {
-                            h += `<div class="rp-detail-list">`;
-                            logs.forEach(l => { h += printRowHtml(l); });
-                            h += `</div>`;
-                        }
-                        return h;
-                    };
+                        .sort((a, b) => b.timestamp - a.timestamp).slice(0, 10);
                     if (studentLogs.length === 0) {
                         contentHtml += `<div class="rp-empty">Sin registros en este periodo.</div>`;
                     } else {
-                        const authList = studentLogs.filter(l => l.requested && l.authorized);
-                        const denList = studentLogs.filter(l => l.requested && !l.authorized);
-                        const nosolList = studentLogs.filter(l => !l.requested);
-                        contentHtml += printBlockHtml('Sesiones autorizadas', authList, 'rp-block-auth');
-                        contentHtml += printBlockHtml('Sesiones no autorizadas (denegadas)', denList, 'rp-block-den');
-                        if (nosolList.length > 0) {
-                            contentHtml += printBlockHtml('Registros sin solicitud de servicio', nosolList, 'rp-block-none');
-                        }
+                        contentHtml += `<div class="rp-detail-list">`;
+                        studentLogs.forEach(l => {
+                            const d = new Date(l.timestamp);
+                            const dateStr = d.toLocaleDateString('es-ES') + ' ' + d.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
+                            let statusHtml;
+                            if (!l.requested) {
+                                statusHtml = '<span class="rp-status-none">No solicito</span>';
+                            } else if (l.authorized) {
+                                statusHtml = '<span class="rp-status-auth">Autorizada</span>';
+                            } else {
+                                statusHtml = '<span class="rp-status-den">Denegada</span>';
+                            }
+                            const userHtml = l.userName ? `<span class="rp-sub">por ${escapeHtml(l.userName)}</span>` : '';
+                            contentHtml += `<div class="rp-detail-row"><span class="rp-date">${dateStr}</span><span>${statusHtml} ${userHtml}</span></div>`;
+                        });
+                        contentHtml += `</div>`;
                     }
                 } else {
                     // Tabla de todos los alumnos (recalcular desde logs)
