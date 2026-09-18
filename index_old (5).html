@@ -160,23 +160,6 @@
         .alert-lvl-2 { animation: pulse-level-2 1s infinite; }
         .alert-lvl-3 { animation: pulse-level-3 0.5s infinite; }
         .alert-lvl-extreme { animation: pulse-level-extreme 0.25s infinite; }
-
-        /* Aviso intermitente de «Uso especial del servicio» (Pisaporte V2):
-           parpadeo duro entre fondo rojo (texto blanco) y fondo claro (texto rojo) */
-        @keyframes special-use-blink {
-            0%, 49% { background-color: #dc2626; color: #ffffff; }
-            50%, 100% { background-color: #fee2e2; color: #991b1b; }
-        }
-        .special-use-blink {
-            animation: special-use-blink 0.9s infinite;
-            border: 2px solid #dc2626;
-        }
-        /* Insignia parpadeante junto al nombre en el listado de alumnado */
-        @keyframes special-use-badge {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.25; }
-        }
-        .special-use-badge { animation: special-use-badge 0.9s infinite; }
         
         /* Impresión de carnets y reportes
            Estrategia: ocultar TODO el body con display:none y mostrar SOLO #print-area.
@@ -322,14 +305,6 @@
                 <div class="text-center mb-6">
                     <div class="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold mb-2 uppercase tracking-wide" id="action-course">1ºA</div>
                     <h2 class="text-2xl font-bold text-gray-800 leading-tight" id="action-student-name">Nombre del Alumno</h2>
-                </div>
-
-                <!-- Aviso intermitente: alumno con «Uso especial del servicio» -->
-                <div id="special-use-banner" class="hidden special-use-blink rounded-xl p-4 mb-4 text-center">
-                    <p class="font-extrabold uppercase tracking-wide text-lg leading-tight">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Uso especial del servicio
-                    </p>
-                    <p class="text-xs font-semibold mt-1 opacity-90">Este alumno tiene marcado un uso especial del servicio por su tutor o por administración. Atención antes de registrar.</p>
                 </div>
 
                 <div id="status-card" class="rounded-xl p-6 text-center shadow-inner mb-4 transition-all duration-300">
@@ -3610,10 +3585,6 @@
             document.getElementById('action-student-name').textContent = student.name;
             document.getElementById('action-course').textContent = student.course;
 
-            // Aviso intermitente de «Uso especial del servicio»: visible solo si
-            // el tutor/administrador ha marcado al alumno (student.specialUse).
-            document.getElementById('special-use-banner').classList.toggle('hidden', !student.specialUse);
-
             document.getElementById('toggle-request').checked = true;
             document.getElementById('toggle-auth').checked = true;
             window.toggleAuthVisibility();
@@ -4471,24 +4442,14 @@
                 // backslash antes de comillas simples y dobles, y backslash del propio backslash
                 const safeName = escapeJs(s.name);
                 const safeId = escapeJs(s.id);
-                // Marca «Uso especial del servicio» (visible con insignia intermitente)
-                const suBadge = s.specialUse
-                    ? `<span class="special-use-badge inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200 text-[10px] font-bold uppercase tracking-wide align-middle" title="Uso especial del servicio"><i class="fa-solid fa-triangle-exclamation"></i> Uso especial</span>`
-                    : '';
-                const suBtnIcon = s.specialUse ? 'fa-bell-slash' : 'fa-bell';
-                const suBtnCls = s.specialUse ? 'text-red-600 hover:text-red-700' : 'text-gray-300 hover:text-red-500';
-                const suBtnTitle = s.specialUse ? 'Quitar uso especial del servicio' : 'Marcar uso especial del servicio';
                 // Escape para mostrar texto en HTML (evita inyeccion)
                 html += `
                     <li class="py-2 flex justify-between items-center text-sm">
                         <div>
-                            <span class="font-medium text-gray-700">${escapeHtml(s.name)}</span>${suBadge}
+                            <span class="font-medium text-gray-700">${escapeHtml(s.name)}</span>
                             <span class="block text-xs text-gray-400">${escapeHtml(s.course)}</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="toggleSpecialUse('${safeId}')" class="${suBtnCls} transition-colors p-2" title="${suBtnTitle}">
-                                <i class="fa-solid ${suBtnIcon}"></i>
-                            </button>
                             <button onclick="showQRPreview('${safeId}', '${safeName}')" class="text-blue-500 hover:text-blue-700 transition-colors p-2" title="Ver QR en pantalla">
                                 <i class="fa-solid fa-qrcode"></i>
                             </button>
@@ -4822,54 +4783,6 @@
                 onConfirm,
                 { actionLabel: 'Continuar', actionClass: 'bg-green-600 hover:bg-green-700', onCancel }
             );
-        };
-
-        // Marca/desmarca «Uso especial del servicio» en un alumno. Permitido al
-        // administrador y al tutor de la clase (solo alumnos de su grupo). Al
-        // escanear el carnet, la ficha muestra un aviso intermitente al profesorado.
-        window.toggleSpecialUse = (studentId) => {
-            if (!currentAppUser || (currentAppUser.role !== 'admin' && currentAppUser.role !== 'tutor')) {
-                return showToast('Solo administración o tutoría pueden marcar el uso especial.');
-            }
-            const s = allStudents.find(x => x.id === studentId);
-            if (!s) return showToast('Alumno no encontrado.');
-            if (currentAppUser.role === 'tutor') {
-                const tgNorm = formatGroupNameForFile(currentAppUser.tutorGroup || '');
-                if (formatGroupNameForFile(s.course || '') !== tgNorm) {
-                    return showToast('Solo puedes marcar alumnos de tu grupo.');
-                }
-            }
-            if (s.specialUse) {
-                window.showConfirmModal(
-                    'Quitar uso especial del servicio',
-                    `¿Quitar la marca de «Uso especial del servicio» a ${s.name}? El aviso intermitente dejará de aparecer al escanear su carnet.`,
-                    async () => {
-                        try {
-                            await updateDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'pisaporte_students', s.id), { specialUse: false });
-                            showToast(`Marca retirada de ${s.name}.`);
-                        } catch (e) {
-                            console.error('Error al quitar uso especial:', e);
-                            showToast('Error al guardar el cambio.');
-                        }
-                    },
-                    { actionLabel: 'Quitar', actionClass: 'bg-gray-600 hover:bg-gray-700' }
-                );
-            } else {
-                window.showConfirmModal(
-                    'Uso especial del servicio',
-                    `¿Marcar a ${s.name} con «Uso especial del servicio»? Al escanear su carnet se mostrará un aviso intermitente al profesorado.`,
-                    async () => {
-                        try {
-                            await updateDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'pisaporte_students', s.id), { specialUse: true });
-                            showToast(`${s.name} marcado con uso especial del servicio.`);
-                        } catch (e) {
-                            console.error('Error al marcar uso especial:', e);
-                            showToast('Error al guardar el cambio.');
-                        }
-                    },
-                    { actionLabel: 'Marcar', actionClass: 'bg-red-600 hover:bg-red-700' }
-                );
-            }
         };
 
         window.confirmDeleteStudent = (id, name) => {
