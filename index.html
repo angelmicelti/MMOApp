@@ -427,18 +427,40 @@
                             <button id="btn-delete-logs" onclick="confirmDeleteLogs()" class="text-xs bg-red-50 text-red-600 px-3 py-1 rounded-md font-semibold hover:bg-red-100 transition-colors"><i class="fa-solid fa-trash-can"></i> Borrar</button>
                         </div>
                     </div>
-                    <!-- Paso 1: Periodo (comun a ambas pestañas) -->
+                    <!-- Paso 1: Periodo (común a Alumnado y Usuarios): un día por
+                         calendario, semanas, meses, intervalo personalizado o todo
+                         el curso. Mismos modos que la pestaña Por Tramos. -->
                     <div class="space-y-2">
                         <label class="block text-[10px] font-bold text-blue-600 uppercase">
                             <span class="inline-block w-4 h-4 bg-blue-600 text-white rounded-full text-[9px] leading-4 text-center mr-1">1</span>
                             Periodo
                         </label>
-                        <select id="report-time" class="w-full border border-gray-300 rounded-lg p-2 text-sm" onchange="generateReport()">
-                            <option value="today">Hoy</option>
-                            <option value="week">Esta semana</option>
-                            <option value="month">Este mes</option>
+                        <select id="report-cm-range" class="w-full border border-gray-300 rounded-lg p-2 text-sm" onchange="onReportRangeChange('cm')">
+                            <option value="day">Un día (calendario)</option>
+                            <option value="current-week">Semana actual</option>
+                            <option value="last-week">Semana pasada</option>
+                            <option value="current-month">Este mes</option>
+                            <option value="last-month">Mes pasado</option>
+                            <option value="custom">Intervalo personalizado</option>
                             <option value="all">Todo el curso</option>
                         </select>
+                        <!-- Modo «Un día»: selector de fecha -->
+                        <div id="report-cm-day-wrap">
+                            <input type="date" id="report-cm-date" class="w-full border border-gray-300 rounded-lg p-2 text-sm" onchange="generateReport()">
+                        </div>
+                        <!-- Modo «Intervalo»: fecha de inicio y de fin -->
+                        <div id="report-cm-custom-wrap" class="grid grid-cols-2 gap-2 hidden">
+                            <div>
+                                <label class="block text-[9px] text-gray-500 mb-0.5">Desde</label>
+                                <input type="date" id="report-cm-date-start" class="w-full border border-gray-300 rounded-lg p-2 text-sm" onchange="generateReport()">
+                            </div>
+                            <div>
+                                <label class="block text-[9px] text-gray-500 mb-0.5">Hasta</label>
+                                <input type="date" id="report-cm-date-end" class="w-full border border-gray-300 rounded-lg p-2 text-sm" onchange="generateReport()">
+                            </div>
+                        </div>
+                        <!-- Resumen del periodo resuelto (ej: Del 15/09/2026 al 21/09/2026) -->
+                        <p id="report-cm-range-summary" class="text-[10px] text-blue-700 font-semibold hidden"></p>
                     </div>
                     <!-- Unidad (solo visible en pestaña Usuarios, donde no hay botonera) -->
                     <div id="report-group-wrapper" class="space-y-2 mt-3 hidden">
@@ -606,13 +628,38 @@
                             <button id="btn-print-timeslots" onclick="printReport()" class="text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-md font-semibold hover:bg-blue-100 transition-colors"><i class="fa-solid fa-print"></i> PDF</button>
                         </div>
 
-                        <!-- Paso 1: Dia concreto -->
+                        <!-- Paso 1: Periodo (día concreto vía calendario, semana actual,
+                             semana pasada, mes pasado o intervalo personalizado con
+                             fecha de inicio y de fin) -->
                         <div class="space-y-2">
                             <label class="block text-[10px] font-bold text-blue-600 uppercase">
                                 <span class="inline-block w-4 h-4 bg-blue-600 text-white rounded-full text-[9px] leading-4 text-center mr-1">1</span>
-                                Día
+                                Periodo
                             </label>
-                            <input type="date" id="report-ts-date" class="w-full border border-gray-300 rounded-lg p-2 text-sm" onchange="generateReport()">
+                            <select id="report-ts-range" class="w-full border border-gray-300 rounded-lg p-2 text-sm" onchange="onReportRangeChange('ts')">
+                                <option value="day">Un día (calendario)</option>
+                                <option value="current-week">Semana actual</option>
+                                <option value="last-week">Semana pasada</option>
+                                <option value="last-month">Mes pasado</option>
+                                <option value="custom">Intervalo personalizado</option>
+                            </select>
+                            <!-- Modo «Un día»: selector de fecha -->
+                            <div id="report-ts-day-wrap">
+                                <input type="date" id="report-ts-date" class="w-full border border-gray-300 rounded-lg p-2 text-sm" onchange="generateReport()">
+                            </div>
+                            <!-- Modo «Intervalo»: fecha de inicio y de fin -->
+                            <div id="report-ts-custom-wrap" class="grid grid-cols-2 gap-2 hidden">
+                                <div>
+                                    <label class="block text-[9px] text-gray-500 mb-0.5">Desde</label>
+                                    <input type="date" id="report-ts-date-start" class="w-full border border-gray-300 rounded-lg p-2 text-sm" onchange="generateReport()">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] text-gray-500 mb-0.5">Hasta</label>
+                                    <input type="date" id="report-ts-date-end" class="w-full border border-gray-300 rounded-lg p-2 text-sm" onchange="generateReport()">
+                                </div>
+                            </div>
+                            <!-- Resumen del periodo resuelto (ej: Del 15/09/2026 al 21/09/2026) -->
+                            <p id="report-ts-range-summary" class="text-[10px] text-blue-700 font-semibold hidden"></p>
                         </div>
 
                         <!-- Paso 2: Unidad (dropdown; para tutores se bloquea a su grupo) -->
@@ -696,7 +743,7 @@
                                 <i class="fa-solid fa-users"></i> Alumnado que salió al servicio
                             </h4>
                             <p class="text-2xl font-black text-amber-700" id="stat-ts-unique-students">0</p>
-                            <p class="text-[10px] text-amber-600">alumno(s) distinto(s) en el tramo seleccionado</p>
+                            <p class="text-[10px] text-amber-600">alumno(s) distinto(s) en el periodo y tramos seleccionados</p>
                         </div>
 
                         <!-- Tabla de registros (cada salida = una fila) -->
@@ -707,6 +754,7 @@
                                         <th class="p-3">Alumno</th>
                                         <th class="p-3">Unidad</th>
                                         <th class="p-3">Tramo</th>
+                                        <th id="report-ts-th-date" class="p-3 hidden">Fecha</th>
                                         <th class="p-3">Hora</th>
                                         <th class="p-3">Estado</th>
                                         <th class="p-3">Por</th>
@@ -715,7 +763,7 @@
                                 <tbody id="report-ts-table-body" class="text-sm divide-y divide-gray-100"></tbody>
                             </table>
                             <div id="report-ts-empty" class="p-6 text-center text-gray-500 hidden">
-                                No hay registros para el día y tramos seleccionados.
+                                No hay registros para el periodo y tramos seleccionados.
                             </div>
                         </div>
                     </div>
@@ -2073,6 +2121,26 @@
             // Resetear botonera de tramos horarios (pestaña Por Tramos): sin esto, la
             // selección del usuario anterior quedaba activa para el siguiente.
             _selectedTimeSlots = new Set();
+            // Resetear el selector de periodo del informe por tramos (Paso 1) a «Un día»
+            const tsRangeSel = document.getElementById('report-ts-range');
+            if (tsRangeSel) tsRangeSel.value = 'day';
+            const tsDayWrap = document.getElementById('report-ts-day-wrap');
+            if (tsDayWrap) tsDayWrap.classList.remove('hidden');
+            const tsCustomWrap = document.getElementById('report-ts-custom-wrap');
+            if (tsCustomWrap) tsCustomWrap.classList.add('hidden');
+            const tsRangeSummary = document.getElementById('report-ts-range-summary');
+            if (tsRangeSummary) tsRangeSummary.classList.add('hidden');
+            const tsThDate = document.getElementById('report-ts-th-date');
+            if (tsThDate) tsThDate.classList.add('hidden');
+            // Resetear el periodo del filtro común (Alumnado/Usuarios) a «Un día»
+            const cmRangeSel = document.getElementById('report-cm-range');
+            if (cmRangeSel) cmRangeSel.value = 'day';
+            const cmDayWrap = document.getElementById('report-cm-day-wrap');
+            if (cmDayWrap) cmDayWrap.classList.remove('hidden');
+            const cmCustomWrap = document.getElementById('report-cm-custom-wrap');
+            if (cmCustomWrap) cmCustomWrap.classList.add('hidden');
+            const cmRangeSummary = document.getElementById('report-cm-range-summary');
+            if (cmRangeSummary) cmRangeSummary.classList.add('hidden');
             // Resetear pestana activa del informe
             currentReportTab = 'students';
             // Limpiar campos de login para que no queden visibles para el siguiente usuario
@@ -4334,6 +4402,11 @@
                     dateInput.value = getLocalTodayString();
                 }
             }
+            // Tarjeta común (Alumnado/Usuarios): fecha por defecto de «Un día» = hoy
+            if (tabId !== 'timeslots') {
+                const cmDate = document.getElementById('report-cm-date');
+                if (cmDate && !cmDate.value) cmDate.value = getLocalTodayString();
+            }
             generateReport();
         };
 
@@ -4771,7 +4844,6 @@
 
             // Escape HTML para todos los textos interpolados en este informe
 
-            const timeFilter = document.getElementById('report-time').value;
             const groupFilter = document.getElementById('report-group').value;
             const studentFilter = document.getElementById('report-student') ?
                 document.getElementById('report-student').value : 'ALL';
@@ -4781,10 +4853,38 @@
             let filteredLogs = allLogs;
             const todayStr = getLocalTodayString();
 
-            // Filtro por periodo
-            if (timeFilter === 'today') filteredLogs = filteredLogs.filter(l => l.dateString === todayStr);
-            else if (timeFilter === 'week') { const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000); filteredLogs = filteredLogs.filter(l => l.timestamp >= weekAgo); }
-            else if (timeFilter === 'month') { const monthStr = todayStr.substring(0, 7); filteredLogs = filteredLogs.filter(l => l.dateString.startsWith(monthStr)); }
+            // Periodo del filtro común (Paso 1): mismos modos que la pestaña Por
+            // Tramos (día / semanas / meses / intervalo / todo el curso).
+            const cmRange = resolveReportRange(null, 'cm');
+            // Metadatos del periodo para el subtítulo y el nombre del PDF
+            window.__reportRangeMeta = {
+                type: cmRange ? cmRange.type : 'all',
+                dateStr: cmRange ? cmRange.start : null,
+                endDateStr: cmRange ? cmRange.end : null,
+                label: cmRange ? describeReportRange(cmRange) : 'Todo el curso'
+            };
+            if (!cmRange) {
+                // Periodo incompleto (fecha sin elegir): sin datos
+                filteredLogs = [];
+            } else if (cmRange.type !== 'all') {
+                // Comparación inclusiva de cadenas YYYY-MM-DD (extremos incluidos)
+                filteredLogs = filteredLogs.filter(l => l.dateString && l.dateString >= cmRange.start && l.dateString <= cmRange.end);
+            }
+            // ¿El filtro equivale a «hoy»? (activa la alerta de 3+ autorizadas en la tabla)
+            const isTodayFilter = !!(cmRange && cmRange.type === 'day' && cmRange.start === todayStr);
+
+            // Resumen del periodo bajo el selector común
+            const cmSummary = document.getElementById('report-cm-range-summary');
+            if (cmSummary) {
+                if (cmRange && cmRange.type !== 'all') {
+                    const msPerDay = 24 * 60 * 60 * 1000;
+                    const days = Math.round((new Date(`${cmRange.end}T00:00:00`) - new Date(`${cmRange.start}T00:00:00`)) / msPerDay) + 1;
+                    cmSummary.textContent = `${describeReportRange(cmRange)} · ${days} ${days === 1 ? 'día' : 'días'}`;
+                    cmSummary.classList.remove('hidden');
+                } else {
+                    cmSummary.classList.add('hidden');
+                }
+            }
 
             // Filtro por unidad:
             // - En pestaña Alumnado: usar la botonera (seleccion multiple)
@@ -4914,7 +5014,7 @@
                         const safeName = escapeJs(stat.name);
                         const safeId = escapeJs(stat.id);
                         // Escape para display HTML
-                        let alertClass = (stat.auth >= 3 && timeFilter === 'today') ? "text-red-600 font-bold" : "";
+                        let alertClass = (stat.auth >= 3 && isTodayFilter) ? "text-red-600 font-bold" : "";
                         const deleteBtnHtml = canDelete ? `<button onclick="confirmDeleteStudentLogs('${safeId}', '${safeName}')" class="text-red-400 hover:text-red-600 p-1"><i class="fa-solid fa-trash-can"></i></button>` : '';
 
                         tbody.insertAdjacentHTML('beforeend', `
@@ -5036,9 +5136,11 @@
 
         // ================= INFORME POR TRAMOS HORARIOS =================
         // Genera el informe de la pestana "Por Tramos": lista todas las salidas al
-        // servicio que ocurrieron en un dia concreto, en los tramos horarios
-        // seleccionados (por defecto: Recreo -> 6ª hora), opcionalmente filtradas
-        // por unidad y/o alumno concreto.
+        // servicio que ocurrieron dentro del periodo seleccionado (un dia concreto,
+        // semana actual, semana pasada, mes pasado o intervalo personalizado con
+        // fecha de inicio y de fin), en los tramos horarios seleccionados
+        // (por defecto: Recreo -> 6ª hora), opcionalmente filtradas por unidad y/o
+        // alumno concreto.
         //
         // Estructura del log (relevante):
         //   { studentId, studentName, course, timestamp, dateString (YYYY-MM-DD),
@@ -5046,32 +5148,159 @@
         //
         // Soporte legacy: si un log antiguo no tiene timeSlotId, se le recalcula
         // a partir del timestamp via getSchoolTimeSlot().
+
+        // Convierte un Date a cadena local YYYY-MM-DD (sin toISOString, que puede
+        // desplazar el dia segun la zona horaria).
+        function toLocalDateStr(d) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        // Formatea YYYY-MM-DD -> dd/mm/yyyy (resumen en pantalla y PDF).
+        function formatDateEs(str) {
+            if (!str) return '?';
+            const p = String(str).split('-');
+            return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : String(str);
+        }
+
+        // Resuelve el periodo elegido en el Paso 1 de los informes. El prefijo `p`
+        // identifica el grupo de controles: 'ts' = pestaña Por Tramos, 'cm' =
+        // tarjeta común de las pestañas Por Alumnado / Por Usuarios.
+        // Devuelve { type, start, end } con fechas YYYY-MM-DD (ambas incluidas) o
+        // null si falta la fecha necesaria. `now` permite inyectar la fecha actual
+        // en los tests.
+        //   day           -> el dia del calendario
+        //   current-week  -> lunes a domingo de la semana en curso
+        //   last-week     -> lunes a domingo de la semana anterior
+        //   current-month -> del dia 1 al ultimo dia del mes en curso
+        //   last-month    -> del dia 1 al ultimo dia del mes anterior
+        //   custom        -> intervalo del usuario (se corrige si viene invertido)
+        //   all           -> todo el curso (sin fechas)
+        function resolveReportRange(now, p) {
+            const byId = (k) => document.getElementById(`report-${p}-${k}`);
+            const rangeSel = byId('range');
+            const rangeType = rangeSel ? rangeSel.value : 'day';
+            const today = now || new Date();
+
+            if (rangeType === 'all') return { type: 'all', start: null, end: null };
+            if (rangeType === 'day') {
+                const el = byId('date');
+                const v = el && el.value ? el.value : '';
+                if (!v) return null;
+                return { type: 'day', start: v, end: v };
+            }
+            if (rangeType === 'current-week' || rangeType === 'last-week') {
+                // Lunes como primer dia de la semana (getDay: dom=0, lun=1, ... sab=6).
+                // Para la semana pasada se retroceden 7 dias adicionales desde el lunes actual.
+                const offsetToMonday = (today.getDay() + 6) % 7 + (rangeType === 'last-week' ? 7 : 0);
+                const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - offsetToMonday);
+                const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
+                return { type: rangeType, start: toLocalDateStr(monday), end: toLocalDateStr(sunday) };
+            }
+            if (rangeType === 'current-month') {
+                // Dia 1 del mes en curso y ultimo dia del mes en curso
+                const first = new Date(today.getFullYear(), today.getMonth(), 1);
+                const last = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                return { type: 'current-month', start: toLocalDateStr(first), end: toLocalDateStr(last) };
+            }
+            if (rangeType === 'last-month') {
+                // Dia 1 del mes anterior y ultimo dia del mes anterior
+                const first = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                const last = new Date(today.getFullYear(), today.getMonth(), 0);
+                return { type: 'last-month', start: toLocalDateStr(first), end: toLocalDateStr(last) };
+            }
+            // custom: intervalo introducido por el usuario
+            const sEl = byId('date-start');
+            const eEl = byId('date-end');
+            let s = sEl && sEl.value ? sEl.value : '';
+            let e = eEl && eEl.value ? eEl.value : '';
+            if (!s || !e) return null;
+            if (s > e) { const t = s; s = e; e = t; } // invertido: se corrige
+            return { type: 'custom', start: s, end: e };
+        }
+
+        // Etiqueta legible del periodo resuelto (resumen en pantalla y PDF).
+        function describeReportRange(range) {
+            if (!range) return '';
+            if (range.type === 'all') return 'Todo el curso';
+            if (range.type === 'day') return `Día ${formatDateEs(range.start)}`;
+            const labels = {
+                'current-week': 'Semana actual',
+                'last-week': 'Semana pasada',
+                'current-month': 'Este mes',
+                'last-month': 'Mes pasado',
+                'custom': 'Intervalo'
+            };
+            return `${labels[range.type] || 'Periodo'}: del ${formatDateEs(range.start)} al ${formatDateEs(range.end)}`;
+        }
+
+        // Selector de periodo (por prefijo 'ts' / 'cm'): muestra/oculta los inputs
+        // de fecha segun el modo elegido y precarga valores razonables.
+        window.onReportRangeChange = (p) => {
+            const byId = (k) => document.getElementById(`report-${p}-${k}`);
+            const rangeSel = byId('range');
+            const type = rangeSel ? rangeSel.value : 'day';
+            const dayWrap = byId('day-wrap');
+            const customWrap = byId('custom-wrap');
+            if (dayWrap) dayWrap.classList.toggle('hidden', type !== 'day');
+            if (customWrap) customWrap.classList.toggle('hidden', type !== 'custom');
+            if (type === 'day') {
+                const dateInput = byId('date');
+                if (dateInput && !dateInput.value) dateInput.value = getLocalTodayString();
+            } else if (type === 'custom') {
+                const sInput = byId('date-start');
+                const eInput = byId('date-end');
+                if (eInput && !eInput.value) eInput.value = getLocalTodayString();
+                if (sInput && !sInput.value) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - 6);
+                    sInput.value = toLocalDateStr(d);
+                }
+            }
+            generateReport();
+        };
         function generateTimeSlotReport() {
-            const dateInput = document.getElementById('report-ts-date');
             const groupSelect = document.getElementById('report-ts-group');
             const studentSelect = document.getElementById('report-ts-student');
             const authFilterSelect = document.getElementById('report-ts-auth-filter');
 
-            const dateStr = dateInput ? dateInput.value : '';
+            // Periodo seleccionado en el Paso 1 (dia / semanas / meses / intervalo)
+            const range = resolveReportRange(null, 'ts');
             const groupFilter = groupSelect ? groupSelect.value : 'ALL';
             const studentFilter = studentSelect ? studentSelect.value : 'ALL';
             const authFilter = authFilterSelect ? authFilterSelect.value : 'ALL';
             const selectedSlots = getSelectedTimeSlotsForFilter(); // array de ids
 
-            // Si no hay fecha, no hay informe
-            if (!dateStr) {
+            // Si el periodo no esta completo, no hay informe
+            if (!range) {
                 document.getElementById('stat-ts-total').textContent = '0';
                 document.getElementById('stat-ts-auth').textContent = '0';
                 document.getElementById('stat-ts-denied').textContent = '0';
                 document.getElementById('stat-ts-unique-students').textContent = '0';
                 document.getElementById('report-ts-table-body').innerHTML = '';
                 document.getElementById('report-ts-empty').classList.remove('hidden');
+                const summaryEl0 = document.getElementById('report-ts-range-summary');
+                if (summaryEl0) summaryEl0.classList.add('hidden');
+                const thDate0 = document.getElementById('report-ts-th-date');
+                if (thDate0) thDate0.classList.add('hidden');
                 window.currentFilteredLogs = [];
                 return;
             }
 
-            // Filtrar logs del dia seleccionado
-            let filtered = allLogs.filter(l => l.dateString === dateStr);
+            // Filtrar logs dentro del periodo (comparacion de cadenas YYYY-MM-DD)
+            let filtered = allLogs.filter(l => l.dateString && l.dateString >= range.start && l.dateString <= range.end);
+
+            // En periodos de varios dias, mostrar la columna Fecha en la tabla
+            const multiDay = range.start !== range.end;
+            const thDate = document.getElementById('report-ts-th-date');
+            if (thDate) thDate.classList.toggle('hidden', !multiDay);
+            // Resumen del periodo resuelto bajo el selector
+            const summaryEl = document.getElementById('report-ts-range-summary');
+            if (summaryEl) {
+                const msPerDay = 24 * 60 * 60 * 1000;
+                const days = Math.round((new Date(`${range.end}T00:00:00`) - new Date(`${range.start}T00:00:00`)) / msPerDay) + 1;
+                summaryEl.textContent = `${describeReportRange(range)} · ${days} ${days === 1 ? 'día' : 'días'}`;
+                summaryEl.classList.remove('hidden');
+            }
 
             // Filtrar por unidad (respeta tutor: solo su grupo)
             let effectiveGroup = groupFilter;
@@ -5122,7 +5351,10 @@
             window.currentFilteredLogs = filtered;
             // Guardar tambien los metadatos del informe para printReport
             window.__timeSlotReportMeta = {
-                dateStr,
+                rangeType: range.type,
+                rangeLabel: describeReportRange(range),
+                dateStr: range.start,
+                endDateStr: range.end,
                 groupFilter: effectiveGroup,
                 studentFilter,
                 authFilter,
@@ -5152,8 +5384,12 @@
             }
             emptyDiv.classList.add('hidden');
 
-            // Ordenar por tramo (orden SCHOOL_TIME_SLOTS) y luego por hora
+            // Ordenar por fecha, luego por tramo (orden SCHOOL_TIME_SLOTS) y luego
+            // por hora (en informes de varios dias agrupa por jornada)
             const sorted = [...filtered].sort((a, b) => {
+                const da = a.dateString || '';
+                const db = b.dateString || '';
+                if (da !== db) return da < db ? -1 : 1;
                 const so = getSlotOrder(a) - getSlotOrder(b);
                 if (so !== 0) return so;
                 return (a.timestamp || 0) - (b.timestamp || 0);
@@ -5174,6 +5410,8 @@
 
                 const d = new Date(l.timestamp);
                 const timeStr = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                // Celda de fecha solo en informes de varios dias
+                const dateCell = multiDay ? `<td class="p-3 text-gray-500 whitespace-nowrap">${formatDateEs(l.dateString)}</td>` : '';
 
                 let statusHtml;
                 if (!l.requested) {
@@ -5191,6 +5429,7 @@
                         <td class="p-3 font-medium text-gray-800">${escapeHtml(l.studentName || 'Alumno desconocido')}</td>
                         <td class="p-3 text-gray-600">${escapeHtml(l.course || '-')}</td>
                         <td class="p-3 text-gray-700">${escapeHtml(slotText)}</td>
+                        ${dateCell}
                         <td class="p-3 text-gray-500 whitespace-nowrap">${timeStr}</td>
                         <td class="p-3">${statusHtml}</td>
                         <td class="p-3">${userHtml}</td>
@@ -5212,7 +5451,9 @@
                 return printTimeSlotReport(printArea, escapeHtml);
             }
 
-            const timeFilterText = document.getElementById('report-time').options[document.getElementById('report-time').selectedIndex].text;
+            // Etiqueta del periodo resuelto (la guarda generateReport)
+            const cmRangeMeta = window.__reportRangeMeta || {};
+            const periodLabel = cmRangeMeta.label || 'Todo el curso';
             const groupFilter = document.getElementById('report-group').value;
             const studentFilter = document.getElementById('report-student') ?
                 document.getElementById('report-student').value : 'ALL';
@@ -5221,7 +5462,7 @@
 
             // Construir subtitulo segun filtros aplicados
             let subtitleParts = [];
-            subtitleParts.push(`Periodo: ${escapeHtml(timeFilterText)}`);
+            subtitleParts.push(`Periodo: ${escapeHtml(periodLabel)}`);
             if (currentReportTab === 'students') {
                 const units = getSelectedUnitsForFilter();
                 if (units === null) {
@@ -5439,7 +5680,16 @@
 
             // ============ NOMBRE DE PDF DESCRIPTIVO SEGUN CONTENIDO ============
             // Sanitiza texto para usarlo en nombre de archivo (sin caracteres problematicos)
-            const periodPart = sanitizeForFile(timeFilterText); // Ej: "Hoy", "Esta_semana"...
+            // Ej: 20260918 | SemanaPasada_20260914-20260920 | TodoElCurso
+            const rangeNamesCm = { 'current-week': 'SemanaActual', 'last-week': 'SemanaPasada', 'current-month': 'EsteMes', 'last-month': 'MesPasado', 'custom': 'Intervalo' };
+            let periodPart;
+            if (cmRangeMeta.type === 'day' && cmRangeMeta.dateStr) {
+                periodPart = cmRangeMeta.dateStr.replace(/-/g, '');
+            } else if (cmRangeMeta.type && cmRangeMeta.type !== 'all' && cmRangeMeta.dateStr && cmRangeMeta.endDateStr) {
+                periodPart = `${rangeNamesCm[cmRangeMeta.type] || 'Periodo'}_${cmRangeMeta.dateStr.replace(/-/g, '')}-${cmRangeMeta.endDateStr.replace(/-/g, '')}`;
+            } else {
+                periodPart = 'TodoElCurso';
+            }
             let fileName;
             if (currentReportTab === 'students') {
                 const units = getSelectedUnitsForFilter();
@@ -5472,24 +5722,18 @@
 
         // ================= PDF: INFORME POR TRAMOS HORARIOS =================
         // Construye el HTML de impresion para la pestana "Por Tramos".
-        // Layout: titulo + subtitulo (dia / unidad / tramos / alumno) + stats
+        // Layout: titulo + subtitulo (periodo / unidad / tramos / alumno) + stats
         // (salidas, autorizadas, denegadas, alumnos unicos) + tabla detallada
         // con una fila por cada salida al servicio.
         function printTimeSlotReport(printArea, escapeHtml) {
             const meta = window.__timeSlotReportMeta || {};
             const filteredLogs = window.currentFilteredLogs || [];
-
-            // Formatear fecha para mostrar (YYYY-MM-DD -> dd/mm/YYYY)
-            const formatDate = (str) => {
-                if (!str) return '?';
-                const parts = String(str).split('-');
-                if (parts.length !== 3) return str;
-                return `${parts[2]}/${parts[1]}/${parts[0]}`;
-            };
+            // En periodos de varios dias se añade la columna Fecha
+            const multiDay = !!meta.endDateStr && meta.endDateStr !== meta.dateStr;
 
             // Construir subtitulo
             const subtitleParts = [];
-            subtitleParts.push(`Día: ${escapeHtml(formatDate(meta.dateStr))}`);
+            subtitleParts.push(`Periodo: ${escapeHtml(meta.rangeLabel || formatDateEs(meta.dateStr))}`);
             subtitleParts.push(`Unidad: ${!meta.groupFilter || meta.groupFilter === 'ALL' ? 'Todas' : escapeHtml(meta.groupFilter)}`);
             // Tramos seleccionados (ordenados segun SCHOOL_TIME_SLOTS)
             const slots = (meta.selectedSlots || []).map(id => {
@@ -5513,8 +5757,14 @@
             const subtitle = subtitleParts.join(' | ');
 
             // Construir nombre de archivo descriptivo (sin caracteres problematicos)
-            // Ej: Informe_Tramos_20260815_1A_Recreo-4-5-6_Autorizadas.pdf
-            const datePart = (meta.dateStr || 'sinfecha').replace(/-/g, '');
+            // Dia unico:  Informe_Tramos_20260815_1A_Recreo-4-5-6_Autorizadas.pdf
+            // Semana:     Informe_Tramos_SemanaPasada_20260908-20260914_1A_...pdf
+            const rangeNames = { 'current-week': 'SemanaActual', 'last-week': 'SemanaPasada', 'last-month': 'MesPasado' };
+            let datePart = (meta.dateStr || 'sinfecha').replace(/-/g, '');
+            if (meta.rangeType && meta.rangeType !== 'day' && meta.endDateStr) {
+                const seg = `${meta.dateStr.replace(/-/g, '')}-${meta.endDateStr.replace(/-/g, '')}`;
+                datePart = rangeNames[meta.rangeType] ? `${rangeNames[meta.rangeType]}_${seg}` : seg;
+            }
             const groupPart = (!meta.groupFilter || meta.groupFilter === 'ALL')
                 ? 'Todas' : sanitizeForFile(formatGroupNameForFile(meta.groupFilter));
             const slotsPart = slots.length > 0 ? sanitizeForFile(slots.join('-')) : 'SinTramos';
@@ -5564,8 +5814,11 @@
             const denLogs = reqLogs.filter(l => !l.authorized);
             const uniqueStudentIds = new Set(filteredLogs.map(l => l.studentId));
 
-            // Ordenar logs por tramo (orden escolar) y luego por hora
+            // Ordenar logs por fecha, luego por tramo (orden escolar) y luego por hora
             const sorted = [...filteredLogs].sort((a, b) => {
+                const da = a.dateString || '';
+                const db = b.dateString || '';
+                if (da !== db) return da < db ? -1 : 1;
                 const so = getSlotOrder(a) - getSlotOrder(b);
                 if (so !== 0) return so;
                 return (a.timestamp || 0) - (b.timestamp || 0);
@@ -5589,6 +5842,7 @@
                             <th>Alumno</th>
                             <th>Unidad</th>
                             <th>Tramo</th>
+                            ${multiDay ? '<th>Fecha</th>' : ''}
                             <th>Hora</th>
                             <th>Estado</th>
                             <th>Por</th>
@@ -5609,6 +5863,7 @@
 
                 const d = new Date(l.timestamp);
                 const timeStr = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                const dateCell = multiDay ? `<td>${formatDateEs(l.dateString)}</td>` : '';
 
                 let statusHtml;
                 if (!l.requested) {
@@ -5624,6 +5879,7 @@
                     <td>${escapeHtml(l.studentName || 'Alumno desconocido')}</td>
                     <td>${escapeHtml(l.course || '-')}</td>
                     <td>${escapeHtml(slotText)}</td>
+                    ${dateCell}
                     <td>${timeStr}</td>
                     <td>${statusHtml}</td>
                     <td><span class="rts-sub">${userHtml}</span></td>
