@@ -84,7 +84,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Librerías Externas -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 
@@ -95,17 +95,6 @@
             overscroll-behavior-y: none;
             background-color: #f3f4f6;
         }
-
-        /* FIX iOS: h-screen (100vh) incluye el area detras de la barra de
-           herramientas de Safari en iPhone, dejando la nav inferior fuera de
-           pantalla. 100dvh usa el viewport real visible. */
-        @supports (height: 100dvh) {
-            body.h-screen { height: 100dvh !important; }
-        }
-        /* FIX iOS PWA: con la status bar translucida, respetar las safe-area
-           del notch (solo aplican en pantalla de inicio / horizontal). */
-        #main-header { padding-top: env(safe-area-inset-top); }
-        #main-nav { padding-bottom: env(safe-area-inset-bottom); }
 
         /* Ocultar barra de scroll pero mantener funcionalidad */
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -272,8 +261,8 @@
                             (p. ej. <span class="font-mono font-semibold text-blue-700">jandluz123</span>).
                             Si es tu primer acceso, tu contraseña inicial coincide con tu usuario.
                         </p>
-                        <input type="text" id="login-username" placeholder="Usuario IdEA (ej: jandluz123)" title="Introduce tu usuario IdEA sin el dominio, p. ej. jandluz123" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();processLogin();}" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
-                        <input type="password" id="login-password" placeholder="Contraseña" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();processLogin();}" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
+                        <input type="text" id="login-username" placeholder="Usuario IdEA (ej: jandluz123)" title="Introduce tu usuario IdEA sin el dominio, p. ej. jandluz123" autocomplete="username" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
+                        <input type="password" id="login-password" placeholder="Contraseña" autocomplete="current-password" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
                         <button onclick="processLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow transition-colors mt-2">
                             Entrar
                         </button>
@@ -285,8 +274,8 @@
                     <div id="form-setup" class="space-y-4 hidden">
                         <input type="text" id="setup-name" placeholder="Apellido1 Apellido2, Nombre" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
                         <input type="text" id="setup-username" placeholder="Usuario de acceso" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
-                        <input type="password" id="setup-password" placeholder="Contraseña" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
-                        <input type="password" id="setup-password-confirm" placeholder="Repetir contraseña" autocapitalize="none" autocorrect="off" spellcheck="false" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
+                        <input type="password" id="setup-password" placeholder="Contraseña" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
+                        <input type="password" id="setup-password-confirm" placeholder="Repetir contraseña" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50">
                         <button onclick="createInitialAdmin()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow transition-colors mt-2">
                             Crear Administrador
                         </button>
@@ -2099,7 +2088,7 @@
             }
         }
 
-        window.processLogin = async () => {
+        window.processLogin = () => {
             const username = document.getElementById('login-username').value.trim();
             const password = document.getElementById('login-password').value.trim();
 
@@ -2108,85 +2097,38 @@
                 return showToast("Rellena usuario y contraseña.");
             }
 
-            // Evitar doble envio mientras se valida
-            const loginBtn = document.querySelector('#form-login button');
-            if (loginBtn) { loginBtn.disabled = true; loginBtn.style.opacity = '0.6'; }
+            // Login case-insensitive en username (consistente con el registro, Bug #A).
+            // String(u.username || ''): un doc sin username (corrupto/legacy) no debe
+            // lanzar TypeError y bloquear el login de TODOS los usuarios.
+            const foundUser = allUsers.find(u =>
+                String(u.username || '').toLowerCase() === username.toLowerCase() &&
+                u.password === password
+            );
 
-            try {
-                // FIX iOS: refrescar allUsers desde el SERVIDOR antes de validar.
-                // En iOS Safari la cache local de Firestore (IndexedDB) puede servir
-                // un snapshot antiguo (con la contrasena anterior) y, si el canal con
-                // el servidor tarda o falla (Relé Privado de iCloud, VPN, red del
-                // centro), el login fallaba de forma sistematica con contrasenas
-                // recien restablecidas: funcionaba la 1ª vez y fallaba en las
-                // siguientes. Validar contra lectura fresca del servidor elimina
-                // toda dependencia del estado de la cache local del dispositivo.
-                try {
-                    const usersRef = collection(db, 'artifacts', activeAppId, 'public', 'data', 'pisaporte_users');
-                    const fresh = await Promise.race([
-                        getDocs(usersRef),
-                        new Promise(resolve => setTimeout(() => resolve(null), 4000))
-                    ]);
-                    if (fresh && !fresh.empty) {
-                        allUsers = fresh.docs
-                            .filter(d => !d.id.startsWith('__'))
-                            .map(d => ({ id: d.id, ...d.data() }));
-                        window.__firebaseDebug.counts.users = allUsers.length;
-                        window.__firebaseDebug.lastLoginSource = 'server';
-                    } else {
-                        window.__firebaseDebug.lastLoginSource = fresh ? 'server-empty' : 'timeout-usando-cache';
-                    }
-                } catch (e) {
-                    window.__firebaseDebug.lastLoginSource = 'server-error-usando-cache';
-                    window.__firebaseDebug.lastErrors.push({ type: 'login_refresh', message: String(e), ts: Date.now() });
-                }
+            if (foundUser) {
+                currentAppUser = foundUser;
+                document.getElementById('login-username').value = ''; // limpiar (Bug #C)
+                document.getElementById('login-password').value = '';
 
-                // Login case-insensitive en username (consistente con el registro, Bug #A).
-                // Tolerante a documentos duplicados: si existen varios docs con el mismo
-                // username (creados dos veces), se valida la contrasena contra todos
-                // ellos en lugar de quedarse solo con el primero del snapshot.
-                const uname = username.toLowerCase();
-                const candidates = allUsers.filter(u => String(u.username || '').toLowerCase() === uname);
-                if (candidates.length > 1) {
-                    console.warn(`[login] OJO: hay ${candidates.length} documentos con el username "${username}". Revisa pisaporte_users y elimina los duplicados.`);
-                }
-                const foundUser = candidates.find(u => u.password === password) || null;
+                // Configurar Interfaz
+                document.getElementById('current-user-name').textContent = foundUser.name.split(' ')[0];
+                document.getElementById('main-header').style.display = 'flex';
+                document.getElementById('main-nav').style.display = 'flex';
 
-                if (foundUser) {
-                    currentAppUser = foundUser;
-                    document.getElementById('login-username').value = ''; // limpiar (Bug #C)
-                    document.getElementById('login-password').value = '';
-
-                    // Configurar Interfaz
-                    document.getElementById('current-user-name').textContent = foundUser.name.split(' ')[0];
-                    document.getElementById('main-header').style.display = 'flex';
-                    document.getElementById('main-nav').style.display = 'flex';
-
-                    showToast(`¡Bienvenido/a, ${foundUser.name}!`);
-                    // Asegurar que los cursos escolares están cargados antes de aplicar
-                    // permisos (para que el selector del header se rellene correctamente).
-                    const finish = () => {
-                        applyPermissions();
-                        window.switchTab('scanner');
-                    };
-                    if (!currentSchoolYear) {
-                        loadSchoolYears().then(finish).catch(finish);
-                    } else {
-                        finish();
-                    }
+                showToast(`¡Bienvenido/a, ${foundUser.name}!`);
+                // Asegurar que los cursos escolares están cargados antes de aplicar
+                // permisos (para que el selector del header se rellene correctamente).
+                const finish = () => {
+                    applyPermissions();
+                    window.switchTab('scanner');
+                };
+                if (!currentSchoolYear) {
+                    loadSchoolYears().then(finish).catch(finish);
                 } else {
-                    // Con ?debug=1 se muestra informacion de diagnostico (nº de usuarios
-                    // cargados, candidatos con ese username y origen de los datos), para
-                    // poder depurar fallos de login desde el propio iPhone.
-                    const _dbg = new URLSearchParams(location.search).has('debug');
-                    if (_dbg) {
-                        showToast(`Credenciales incorrectas [users=${allUsers.length}, cand=${candidates.length}, src=${window.__firebaseDebug.lastLoginSource || '?'}]`);
-                    } else {
-                        showToast("Credenciales incorrectas.");
-                    }
+                    finish();
                 }
-            } finally {
-                if (loginBtn) { loginBtn.disabled = false; loginBtn.style.opacity = ''; }
+            } else {
+                showToast("Credenciales incorrectas.");
             }
         };
 
@@ -3436,10 +3378,6 @@
 
         // Variable para evitar llamadas concurrentes a startScanner
         let _startScannerInFlight = false;
-        // FIX iOS: instante del ultimo stop() de camara. Safari necesita un pequeno
-        // respiro entre stop() y un nuevo getUserMedia en la misma pagina; si no, la
-        // camara puede quedar sin arrancar (tipico al volver a entrar tras logout).
-        let _lastScannerStopTs = 0;
 
         window.startScanner = async () => {
             if (!html5QrcodeScanner) return;
@@ -3474,10 +3412,8 @@
                 const config = {
                     fps: 10,
                     qrbox: qrboxFn,
+                    aspectRatio: 1.0,
                     disableFlip: false
-                    // FIX iOS: se elimina aspectRatio: 1.0 — Safari en iPhone lanza
-                    // OverconstrainedError con relaciones de aspecto no nativas y la
-                    // camara no llega a arrancar. Sin aspectRatio se usa el nativo.
                 };
 
                 // Determinar constraints segun seleccion del usuario
@@ -3527,13 +3463,6 @@
 
                 console.log(`Iniciando camara: ${cameraLabel}`);
 
-                // FIX iOS: si se acabo de parar la camara (logout, cambio de pestana),
-                // esperar hasta 400ms para que Safari libere el stream anterior.
-                const _sinceStop = Date.now() - _lastScannerStopTs;
-                if (_lastScannerStopTs > 0 && _sinceStop < 400) {
-                    await new Promise(r => setTimeout(r, 400 - _sinceStop));
-                }
-
                 try {
                     // Si el scanner ya esta activo, detenerlo primero (caso: cambio de camara)
                     if (html5QrcodeScanner.isScanning === true) {
@@ -3554,13 +3483,6 @@
                     }
                 } catch (err) {
                     console.error(`Error al iniciar camara ${cameraLabel}:`, err.name, err.message);
-
-                    // FIX iOS: Safari puede dejar la instancia Html5Qrcode en estado
-                    // "zombie" tras stop() (la camara no vuelve a arrancar aunque se
-                    // reintente). Recrear la instancia sobre el mismo div suele
-                    // recuperarla sin necesidad de recargar la pagina.
-                    try { html5QrcodeScanner.clear(); } catch (e) {}
-                    try { html5QrcodeScanner = new Html5Qrcode("reader"); } catch (e) {}
 
                     // Si la camara seleccionada fallo, probar con la otra (solo en auto)
                     if (selectedValue === 'auto' || !selectedValue) {
@@ -3587,9 +3509,7 @@
                     let msg = "No se pudo acceder a la camara.";
                     if (err) {
                         if (err.name === 'NotAllowedError') {
-                            // Mensaje especifico iOS: el permiso de camara se gestiona en
-                            // Ajustes del sistema (no solo en el boton candado del navegador).
-                            msg = "Permiso de cámara denegado. En iPhone: Ajustes > Safari > Cámara > Permitir (o Ajustes > Apps > Safari), y recarga la página.";
+                            msg = "Permiso de camara denegado. Activa el permiso en el navegador.";
                         } else if (err.name === 'NotFoundError' || err.name === 'OverconstrainedError') {
                             msg = "No se encontro ninguna camara compatible.";
                         } else if (err.name === 'NotReadableError') {
@@ -3612,9 +3532,6 @@
                 // race conditions: si el usuario cambia de pestana y vuelve rapido, el flag
                 // ya esta en false y startScanner podra reiniciar la camara.
                 isScanningActive = false;
-                // FIX iOS: registrar el instante del stop() para que el siguiente
-                // startScanner espere el cooldown y Safari libere bien el stream.
-                _lastScannerStopTs = Date.now();
                 try {
                     const stopPromise = html5QrcodeScanner.stop();
                     if (stopPromise && typeof stopPromise.then === 'function') {
@@ -6571,32 +6488,6 @@ ${stylesStr}
             }, 8000);
         }
         window.showToastWithAction = showToastWithAction;
-
-        // ================= MODO DIAGNOSTICO (?debug=1) =================
-        // Panel flotante para depurar desde el propio iPhone (Safari de escritorio
-        // no siempre esta disponible). Muestra el estado de Firebase Auth, el nº de
-        // documentos cargados por coleccion, el origen del ultimo login (servidor o
-        // cache local) y los ultimos errores registrados en __firebaseDebug.
-        if (new URLSearchParams(location.search).has('debug')) {
-            const _dbgPanel = document.createElement('div');
-            _dbgPanel.id = 'debug-panel';
-            _dbgPanel.style.cssText = 'position:fixed;bottom:70px;left:8px;right:8px;z-index:99999;background:rgba(0,0,0,0.85);color:#4ade80;font:11px/1.45 ui-monospace,monospace;padding:8px 10px;border-radius:8px;max-height:38vh;overflow:auto;pointer-events:none;white-space:pre-wrap;';
-            document.body.appendChild(_dbgPanel);
-            setInterval(() => {
-                const d = window.__firebaseDebug || {};
-                const c = d.counts || {};
-                const errs = (d.lastErrors || []).slice(-3)
-                    .map(e => (e.type || '?') + (e.code ? ':' + e.code : ''))
-                    .join(' | ');
-                _dbgPanel.textContent =
-                    'auth=' + (d.authUid ? 'OK' : 'NO') +
-                    ' users=' + (c.users !== undefined ? c.users : '?') +
-                    ' students=' + (c.students !== undefined ? c.students : '?') +
-                    ' loginSrc=' + (d.lastLoginSource || '-') +
-                    ' cam=' + (typeof isScanningActive !== 'undefined' && isScanningActive ? 'ON' : 'OFF') +
-                    '\nerrs: ' + (errs || '(ninguno)');
-            }, 2000);
-        }
 
     </script>
 </body>
