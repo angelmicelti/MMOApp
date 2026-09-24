@@ -782,6 +782,16 @@
                             <p class="text-[10px] text-amber-600">alumno(s) distinto(s) en el periodo y tramos seleccionados</p>
                         </div>
 
+                        <!-- Aviso visual: alumnado repetido (hay menos alumnos distintos que salidas,
+                             con lo cual alguno ha ido mas de una vez al servicio). Se rellena/togglea
+                             desde generateTimeSlotReport(). -->
+                        <div id="report-ts-repeat-legend" class="bg-amber-100 border border-amber-300 rounded-lg p-3 hidden">
+                            <p class="text-[11px] text-amber-900 leading-snug flex items-start gap-2">
+                                <i class="fa-solid fa-repeat mt-0.5"></i>
+                                <span id="report-ts-repeat-legend-text"></span>
+                            </p>
+                        </div>
+
                         <!-- Tabla de registros (cada salida = una fila) -->
                         <div id="report-ts-table-wrapper" class="overflow-x-auto border border-gray-100 rounded-lg">
                             <table class="w-full text-left border-collapse">
@@ -5428,6 +5438,36 @@
             }
             generateReport();
         };
+        // ================= ALUMNADO REPETIDO EN INFORME POR TRAMOS =================
+        // Cuando hay menos alumnos distintos que salidas al servicio en el periodo,
+        // alguno ha ido mas de una vez y debe destacarse visualmente en la tabla
+        // (pantalla y PDF). Aqui el calculo compartido y el badge de pantalla.
+        //
+        // Devuelve un Map clave-alumno -> { count, name } SOLO con los alumnos que
+        // aparecen mas de una vez. La clave es studentId y, si el registro legacy no
+        // lo trae, se usa el nombre como fallback (mismo criterio en pantalla y PDF).
+        function computeRepeatedStudents(logs) {
+            const counts = new Map();
+            (logs || []).forEach(l => {
+                const key = l.studentId || ('name:' + (l.studentName || 'Alumno desconocido'));
+                const prev = counts.get(key);
+                if (prev) {
+                    prev.count++;
+                } else {
+                    counts.set(key, { count: 1, name: l.studentName || 'Alumno desconocido' });
+                }
+            });
+            const repeats = new Map();
+            counts.forEach((v, k) => { if (v.count > 1) repeats.set(k, v); });
+            return repeats;
+        }
+
+        // Badge ambar que acompania al nombre del alumno repetido en la tabla
+        // on-screen. El atributo title da el detalle al mantener pulsado (movil).
+        function repeatBadgeHtml(count) {
+            return ` <span class="inline-flex items-center bg-amber-200 text-amber-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap align-middle" title="Ha ido ${count} veces al servicio en este periodo"><i class="fa-solid fa-repeat text-[8px] mr-1"></i>×${count}</span>`;
+        }
+
         function generateTimeSlotReport() {
             const groupSelect = document.getElementById('report-ts-group');
             const studentSelect = document.getElementById('report-ts-student');
@@ -5448,6 +5488,8 @@
                 document.getElementById('stat-ts-unique-students').textContent = '0';
                 document.getElementById('report-ts-table-body').innerHTML = '';
                 document.getElementById('report-ts-empty').classList.remove('hidden');
+                const repeatLegend0 = document.getElementById('report-ts-repeat-legend');
+                if (repeatLegend0) repeatLegend0.classList.add('hidden');
                 const summaryEl0 = document.getElementById('report-ts-range-summary');
                 if (summaryEl0) summaryEl0.classList.add('hidden');
                 const thDate0 = document.getElementById('report-ts-th-date');
@@ -5543,6 +5585,28 @@
             document.getElementById('stat-ts-denied').textContent = denLogs.length;
             document.getElementById('stat-ts-unique-students').textContent = uniqueStudentIds.size;
 
+            // ============ ALUMNADO REPETIDO (ha ido mas de una vez) ============
+            // Condicion pedida: menos alumnos distintos que salidas totales
+            // (uniqueStudentIds.size < filtered.length). Es equivalente a que exista
+            // algun alumno con 2+ salidas: en ese caso se resaltan sus filas en ambar
+            // con un badge ×N y se muestra una leyenda explicativa sobre la tabla.
+            const repeatedStudents = computeRepeatedStudents(filtered);
+            const repeatLegend = document.getElementById('report-ts-repeat-legend');
+            const repeatLegendText = document.getElementById('report-ts-repeat-legend-text');
+            if (repeatLegend && repeatLegendText) {
+                if (repeatedStudents.size > 0) {
+                    const topRepeat = [...repeatedStudents.values()].sort((a, b) => b.count - a.count)[0];
+                    repeatLegendText.innerHTML =
+                        `Hay <b>${repeatedStudents.size}</b> alumno(s) que han ido <b>más de una vez</b> al servicio en este periodo ` +
+                        `(${filtered.length} salidas · ${uniqueStudentIds.size} alumnos distintos). ` +
+                        `Sus filas aparecen resaltadas con el badge <b>×N</b>. Máximo: <b>${escapeHtml(topRepeat.name)}</b> con ${topRepeat.count} salidas.`;
+                    repeatLegend.classList.remove('hidden');
+                } else {
+                    repeatLegendText.textContent = '';
+                    repeatLegend.classList.add('hidden');
+                }
+            }
+
             // ============ TABLA ============
             const tbody = document.getElementById('report-ts-table-body');
             const emptyDiv = document.getElementById('report-ts-empty');
@@ -5594,9 +5658,17 @@
 
                 const userHtml = l.userName ? `<span class="text-gray-500 text-xs">${escapeHtml(l.userName)}</span>` : '<span class="text-gray-300 text-xs italic">—</span>';
 
+                // Alumno repetido (2+ salidas en el periodo): fila ambar + badge ×N
+                const repeatKey = l.studentId || ('name:' + (l.studentName || 'Alumno desconocido'));
+                const repeatInfo = repeatedStudents.get(repeatKey);
+                const rowClass = repeatInfo ? 'bg-amber-50 hover:bg-amber-100' : 'hover:bg-gray-50';
+                const nameHtml = repeatInfo
+                    ? `${escapeHtml(l.studentName || 'Alumno desconocido')}${repeatBadgeHtml(repeatInfo.count)}`
+                    : escapeHtml(l.studentName || 'Alumno desconocido');
+
                 tbody.insertAdjacentHTML('beforeend', `
-                    <tr class="hover:bg-gray-50">
-                        <td class="p-3 font-medium text-gray-800">${escapeHtml(l.studentName || 'Alumno desconocido')}</td>
+                    <tr class="${rowClass}">
+                        <td class="p-3 font-medium text-gray-800">${nameHtml}</td>
                         <td class="p-3 text-gray-600">${escapeHtml(l.course || '-')}</td>
                         <td class="p-3 text-gray-700">${escapeHtml(slotText)}</td>
                         ${dateCell}
@@ -5975,6 +6047,10 @@
                 .rts-status-den { color: #b91c1c; font-weight: bold; }
                 .rts-status-none { color: #6b7280; }
                 .rts-sub { color: #6b7280; font-size: 11px; }
+                /* Alumnado repetido (menos alumnos distintos que salidas en el periodo) */
+                .rts-row-repeat { background-color: #fffbeb; }
+                .rts-badge-repeat { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 9999px; background-color: #fde68a; color: #78350f; font-weight: bold; font-size: 10px; border: 1px solid #f59e0b; vertical-align: middle; white-space: nowrap; }
+                .rts-repeat-note { font-family: sans-serif; font-size: 11px; color: #92400e; background-color: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; padding: 8px 10px; margin-bottom: 12px; }
             `;
             printArea.appendChild(style);
 
@@ -5983,6 +6059,9 @@
             const authLogs = reqLogs.filter(l => l.authorized);
             const denLogs = reqLogs.filter(l => !l.authorized);
             const uniqueStudentIds = new Set(filteredLogs.map(l => l.studentId));
+            // Alumnado repetido: si hay menos alumnos distintos que salidas totales,
+            // alguno ha ido mas de una vez; se resalta en el PDF igual que en pantalla.
+            const repeatedStudents = computeRepeatedStudents(filteredLogs);
 
             // Ordenar logs por fecha, luego por tramo (orden escolar) y luego por hora
             const sorted = [...filteredLogs].sort((a, b) => {
@@ -5993,6 +6072,17 @@
                 if (so !== 0) return so;
                 return (a.timestamp || 0) - (b.timestamp || 0);
             });
+
+            // Nota explicativa solo cuando hay alumnado repetido
+            let repeatNoteHtml = '';
+            if (repeatedStudents.size > 0) {
+                const topRepeatPdf = [...repeatedStudents.values()].sort((a, b) => b.count - a.count)[0];
+                repeatNoteHtml =
+                    `<p class="rts-repeat-note"><b>${repeatedStudents.size}</b> alumno(s) han ido <b>más de una vez</b> al servicio en este periodo ` +
+                    `(${filteredLogs.length} salidas · ${uniqueStudentIds.size} alumnos distintos). ` +
+                    `Las filas resaltadas en ámbar son de alumnado repetido; el distintivo ×N indica su número de salidas. ` +
+                    `Máximo: <b>${escapeHtml(topRepeatPdf.name)}</b> con ${topRepeatPdf.count} salidas.</p>`;
+            }
 
             let contentHtml = `
                 <div class="rts-header">
@@ -6006,6 +6096,7 @@
                     <div class="rts-stat-box rts-stat-unique"><div class="rts-stat-label">Alumnado único</div><div class="rts-stat-value">${uniqueStudentIds.size}</div></div>
                 </div>
                 <div class="rts-section-title">Listado de salidas al servicio</div>
+                ${repeatNoteHtml}
                 <table class="rts-table">
                     <thead>
                         <tr>
@@ -6045,8 +6136,16 @@
                 }
                 const userHtml = l.userName ? escapeHtml(l.userName) : '—';
 
-                contentHtml += `<tr>
-                    <td>${escapeHtml(l.studentName || 'Alumno desconocido')}</td>
+                // Alumno repetido (2+ salidas en el periodo): fila ambar + badge ×N
+                const repeatKey = l.studentId || ('name:' + (l.studentName || 'Alumno desconocido'));
+                const repeatInfo = repeatedStudents.get(repeatKey);
+                const rowClassPdf = repeatInfo ? ' class="rts-row-repeat"' : '';
+                const nameCellPdf = repeatInfo
+                    ? `${escapeHtml(l.studentName || 'Alumno desconocido')}<span class="rts-badge-repeat" title="Ha ido ${repeatInfo.count} veces al servicio en este periodo">×${repeatInfo.count}</span>`
+                    : escapeHtml(l.studentName || 'Alumno desconocido');
+
+                contentHtml += `<tr${rowClassPdf}>
+                    <td>${nameCellPdf}</td>
                     <td>${escapeHtml(l.course || '-')}</td>
                     <td>${escapeHtml(slotText)}</td>
                     ${dateCell}
